@@ -125,8 +125,10 @@ for wpth in wpths:
     crd = get_crd(datum.index.values)
     sname = osp.basename(osp.dirname(wpth))
     print(sname)
-    vmin = np.quantile(datum.values,0.05)
-    vmax = np.quantile(datum.values,0.95)
+    #vmin = np.quantile(datum.values,0.01)
+    #vmax = np.quantile(datum.values,0.99)
+    vmin = np.min(datum.values)
+    vmax = np.max(datum.values)
     ct = datum.columns.values.tolist()
     data.update({sname:{'data':datum,
                         'coordinates':crd,
