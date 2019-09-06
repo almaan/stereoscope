@@ -1,1 +1,3 @@
 preprocess/breast_cancer/generate_sep.sh
+stsc/*.txt
+stsc/*.sh
