@@ -21,7 +21,6 @@ class CountDataHelper(object):
             self.M = int(self.cnt.shape[0])
             self.Z = np.unique(self.lbl).shape[0]
             self.libsize = self.cnt.sum(dim = 1)
-            print(self.G,self.M,self.Z)
             return tmp
         return wrapper
 
@@ -35,7 +34,6 @@ class CountData(Dataset):
                 ):
 
         self.cnt = cnt
-        print(self.cnt.shape)
         self.lbl = np.ones(self.cnt.shape[0]) * np.nan
         self.zidx = np.ones(self.cnt.shape[0]) * np.nan
 
@@ -46,10 +44,7 @@ class CountData(Dataset):
             self.lbl = lbl
 
             self.index = self.cnt.index.intersection(self.lbl.index)
-            print('index ' + str(self.index.shape))
-            print('cnt ' + str(self.cnt.shape))
             self.cnt = self.cnt.loc[self.index,:]
-            print('cnt ' + str(self.cnt.shape))
             self.lbl = self.lbl.loc[self.index].values.reshape(-1,)
 
             tonumeric = { v:k for k,v in enumerate(np.unique(self.lbl)) }
@@ -63,10 +58,7 @@ class CountData(Dataset):
 
             self.zidx = t.tensor(self.zidx.flatten().astype(np.int))
 
-        print(self.cnt.shape)
         self.cnt = t.tensor(self.cnt.values.astype(np.float32))
-        print(self.cnt.shape)
-        print('----------')
         self.libsize = self.cnt.sum(dim = 1)
 
     @CountDataHelper.update
@@ -105,9 +97,6 @@ class CountData(Dataset):
         _,upos = np.unique(self.zidx, return_index = True)
         typenames = self.lbl[upos]
         return typenames
-
-
-
 
 
 
