@@ -270,7 +270,7 @@ def write_file(file,opth):
 def make_sc_dataset(cnt_pth : str,
                     lbl_pth : str,
                     n_genes : int = None,
-                    lbl_colname : str = None,
+                    lbl_colname : str = 'bio_celltype',
                     filter_genes : bool = False,
                     min_counts : int = 0,
                     min_cells : int = 0):
@@ -278,7 +278,6 @@ def make_sc_dataset(cnt_pth : str,
 
     cnt = read_file(cnt_pth)
     lbl = read_file(lbl_pth)
-
     if lbl_colname is None:
         lbl = lbl.iloc[:,0]
     else:
@@ -291,6 +290,7 @@ def make_sc_dataset(cnt_pth : str,
         sel = sel[0:n_genes]
         cnt = cnt.iloc[sel,:]
         lbl = lbl.iloc[sel,:]
+
 
     dataset = D.CountData(cnt = cnt, lbl = lbl)
 

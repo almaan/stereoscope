@@ -62,7 +62,21 @@ prs.add_argument('-cn','--column_name',
                                   'type label',
                                  ]))
 
+
+prs.add_argument('-af','--add_filter',
+                 required = False,
+                 type = str,
+                 nargs = 2,
+                 default = [None,None],
+                 help = ' '.join(['Additional filtering',
+                                  'Column as first argument',
+                                  'value as second',
+                                 ]))
+
+
+
 args = prs.parse_args()
+
 
 np.random.seed(1337)
 
@@ -89,66 +103,60 @@ except OSError:
           f" to the file.")
     sys.exit(-1)
 
-genes = ds.ra['Gene']
-ngenes = genes.shape[0]
+if args.add_filter[0] is not None:
+    add_filter = ds.ca[args.add_filter[0]] == args.add_filter[1]
+else:
+    add_filter = np.ones(ds.ca[label].shape[0]).astype(np.bool)
+
 
 uni_types = np.unique(ds.ca[label])
-n_uni_types = uni_types.shape[0]
 
-cell_list = []
-barcode_list = []
-idx_list = [0]
-use_labels = []
+use_cells = []
 
-for z in range(n_uni_types):
-    type = uni_types[z]
-    zidx = np.where(ds.ca[label] == type)[0]
+for type in uni_types:
+    zidx = np.where((ds.ca[label] == type) & add_filter)[0]
     nz = zidx.shape[0]
 
     if nz < lower_bound:
         print(f"{type} | was discarded due to insufficient number of cells")
         continue
 
-    elif nz > upper_bound:
-        zidx = np.random.choice(np.where(zidx)[0],
-                                    size = upper_bound,
-                                    replace = False,
-                                   )
+    elif nz >= upper_bound:
+        zidx = np.random.choice(zidx,
+                                size = upper_bound,
+                                replace = False,
+                                )
 
-    zidx.sort()
     fromz = zidx.shape[0]
-
-    use_labels += [type] * fromz
-    cell_list.append(ds[:,zidx])
-    idx_list.append(fromz)
-
-    barcode_list += ds.ca['CellID'][zidx].tolist()
+    use_cells +=  zidx.tolist()
 
     print(f"{type} | Used {fromz} cells ")
 
+use_cells = np.array(use_cells)
+use_cells = np.sort(use_cells)
 
-idx_list = np.array(idx_list)
-pos  = np.cumsum(idx_list)
-n_uni_types = len(cell_list)
 
-new_cnt = np.zeros((pos[-1],ngenes))
-print(new_cnt.shape)
-
-for z in range(n_uni_types - 1):
-    new_cnt[pos[z]:pos[z + 1],:] = cell_list[z].T
+new_cnt = ds[:,use_cells].T
+new_lbl = ds.ca[label][use_cells]
+new_barcodes = ds.ca['CellID'][use_cells]
+_, idx = np.unique(new_barcodes,return_index = True)
+new_cnt = new_cnt[idx,:]
+new_lbl = new_lbl[idx]
+new_barcodes = new_barcodes[idx]
+genes = ds.ra['Gene']
 
 new_cnt = pd.DataFrame(new_cnt,
-                       index = pd.Index(barcode_list),
+                       index = pd.Index(new_barcodes),
                        columns = pd.Index(genes),
                       )
 
-new_mta = pd.DataFrame(use_labels,
-                       index = pd.Index(barcode_list),
-                       columns = pd.Index(['type']),
+new_mta = pd.DataFrame(new_lbl,
+                       index = pd.Index(new_barcodes),
+                       columns = pd.Index(['bio_celltype']),
                        )
 
 
-name,counts = np.unique(use_labels,return_counts = True)
+name,counts = np.unique(new_lbl,return_counts = True)
 
 stats = pd.DataFrame(counts,
                      index = pd.Index(name),
