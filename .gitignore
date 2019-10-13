@@ -1,3 +1,8 @@
 preprocess/breast_cancer/generate_sep.sh
 stsc/*.txt
 stsc/*.sh
+*.bak
+visual/map2he/imgs/
+STereoSCope.egg-info/
+build/
+dist/

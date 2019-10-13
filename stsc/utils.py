@@ -13,7 +13,7 @@ import logging
 import os.path as osp
 import re
 import datetime
-import datasets as D
+import stsc.datasets as D
 
 def generate_identifier():
    return re.sub(' |:','',str(datetime.datetime.today()))

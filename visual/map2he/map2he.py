@@ -122,6 +122,16 @@ def main():
                      help = 'output directory',
                     )
 
+
+    prs.add_argument('-g','--gray',
+                     required = False,
+                     default = False,
+                     action = 'store_true',
+                     help = 'grayscale',
+                    )
+
+
+
     prs.add_argument('-si','--scale_internally',
                      required = False,
                      default = False,
@@ -210,7 +220,11 @@ def main():
                          (img_y,img_x),
                          color = (255,255,255,0))
 
-        img = Image.composite(eimg,img,mimg)
+        if args.mask_path is not None:
+            img = Image.composite(eimg,img,mimg)
+
+        if args.gray:
+            img = img.convert('LA')
 
         ax.imshow(img)
         ax.scatter(crd[:,0],

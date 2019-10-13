@@ -4,18 +4,17 @@ from setuptools import setup
 import os
 
 setup(name='STereoSCope',
-            version='0.1',
+            version='0.2',
             description='Integration of ST and SC data',
             url='http://github.com/almaan/stsc',
             author='Alma Andersson',
             author_email='alma.andersson@scilifelab.se',
             license='MIT',
-            packages=['STereoSCope'],
+            packages=['stsc'],
             install_requires=[
                             'torch',
                             'numpy',
                             'pandas',
-                            'scipy',
                             'logging',
                             'argparse',
                             'matplotlib',

@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-sys.path.append('/home/alma/Documents/PhD/stsc')
-
 import torch as t
 
 import numpy as np

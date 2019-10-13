@@ -4,8 +4,6 @@ import os.path as osp
 from os import mkdir
 import sys
 
-sys.path.append('/home/alma/Documents/PhD/stsc')
-
 import torch as t
 
 import numpy as np
@@ -13,125 +11,25 @@ import pandas as pd
 
 from torch.cuda import is_available
 from torch.utils.data import Dataset
+
+import fit
 import datasets as D
 import models as M
 import utils
 import parser
 
 
-def fit_st_data(st_cnt_pths,
-                R,
-                logits,
-                device,
-                st_epochs,
-                learning_rate,
-                st_batch_size,
-                silent_mode,
-                st_from_model,
-                **kwargs):
-
-    if not all([osp.exists(x) for x in st_cnt_pths]):
-        sys.exit(-1)
-
-    st_data = utils.make_st_dataset(st_cnt_pths)
-
-    inter = st_data.intersect(R.index)
-    R = R.loc[inter,:]
-    logits = logits.loc[inter,:]
-
-    st_model = M.STModel(st_data.M,
-                         R = R.values,
-                         logits = logits.values,
-                         device = device)
-
-    if st_from_model is not None and osp.exists(st_from_model):
-        st_model.load_state_dict(t.load(st_from_model))
-
-    st_loss_history = utils.fit(dataset = st_data,
-                                model = st_model,
-                                device = device,
-                                epochs = st_epochs,
-                                learning_rate = learning_rate,
-                                batch_size = st_batch_size,
-                                silent_mode = silent_mode,
-                                )
-
-    W  = st_model.v.data.cpu().numpy().T
-    W = W[:,0:st_model.K]
-    W = W / W.sum(axis = 1).reshape(-1,1)
-
-    W = pd.DataFrame(W,
-                     index = st_data.index,
-                     columns = R.columns)
-
-    wlist = utils.split_joint_matrix(W)
-
-    return wlist,st_model
-
-def fit_sc_data(sc_cnt_pth,
-                sc_lbl_pth,
-                device,
-                sc_epochs,
-                learning_rate,
-                sc_batch_size,
-                silent_mode,
-                sc_from_model,
-                **kwargs):
-
-    if not osp.exists(sc_cnt_pth):
-        sys.exit(-1)
-
-    if not osp.exists(sc_lbl_pth):
-        sys.exit(-1)
-
-
-
-    sc_data = utils.make_sc_dataset(sc_cnt_pth,
-                                    sc_lbl_pth,
-                                    )
-
-    sc_model = M.ScModel(n_genes = sc_data.G,
-                    n_celltypes = sc_data.Z,
-                    device = device)
-
-    if sc_from_model is not None and osp.exists(sc_from_model):
-        sc_model.load_state_dict(t.load(sc_from_model))
-
-
-
-    sc_loss_history = utils.fit(dataset = sc_data,
-                                model = sc_model,
-                                device = device,
-                                epochs = sc_epochs,
-                                learning_rate = learning_rate,
-                                batch_size = sc_batch_size,
-                                silent_mode = silent_mode
-                                )
-
-    logits = sc_model.o.data.cpu().numpy()
-    R = sc_model.R.data.cpu().numpy()
-
-    typenames = sc_data.unique_labels()
-
-    R = pd.DataFrame(R,
-                     index = sc_data.genes,
-                     columns = typenames,
-                     )
-
-    logits = pd.DataFrame(logits,
-                          index = sc_data.genes,
-                          columns = pd.Index(['logits']))
-
-    return R, logits, sc_model
-
 
 def main():
-
 
     timestamp = utils.generate_identifier()
 
     prs = parser.make_parser()
     args = prs.parse_args()
+
+    if len(sys.argv[1::]) < 1:
+        prs.print_help()
+        sys.exit(-1)
 
     if not osp.exists(args.out_dir):
         mkdir(args.out_dir)
@@ -171,7 +69,7 @@ def main():
         if args.sc_model is not None:
             log.info("loading state from provided sc_model")
 
-        R, logits,sc_model = fit_sc_data(**input_args)
+        R, logits,sc_model = fit.fit_sc_data(**input_args)
 
         oname_R = osp.join(args.out_dir,'.'.join(['R',timestamp,'tsv']))
         oname_logits = osp.join(args.out_dir,'.'.join(['logits',timestamp,'tsv']))
@@ -194,9 +92,9 @@ def main():
         if args.st_model is not None:
             log.info("loading state from provided st_model")
 
-        wlist,st_model = fit_st_data(R = R,
-                                    logits = logits,
-                                     **input_args)
+        wlist,st_model = fit.fit_st_data(R = R,
+                                        logits = logits,
+                                         **input_args)
 
         oname_st_model = osp.join(args.out_dir,'.'.join(['st_model',timestamp,'pt']))
         t.save(st_model.state_dict(),oname_st_model)
