@@ -21,7 +21,8 @@ setup(name='STereoSCope',
                             'sklearn',
                             'umap-learn',
                       ],
+            entry_points={'console_scripts': ['stereoscope = stsc.__main__:main',
+                                             ]
+                         },
             zip_safe=False)
-
-
 

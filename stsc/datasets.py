@@ -7,8 +7,10 @@ import numpy as np
 import pandas as pd
 
 from torch.utils.data import Dataset
-
+from typing import List
 import re
+
+import stsc.utils as utils
 
 class CountDataHelper(object):
     @classmethod
@@ -109,4 +111,57 @@ class CountData(Dataset):
 
     def __len__(self,):
         return self.M
+
+def make_sc_dataset(cnt_pth : str,
+                    lbl_pth : str,
+                    topn_genes : int = None,
+                    lbl_colname : str = 'bio_celltype',
+                    filter_genes : bool = False,
+                    min_counts : int = 0,
+                    min_cells : int = 0,
+                    ):
+
+
+    cnt = utils.read_file(cnt_pth)
+    lbl = utils.read_file(lbl_pth)
+
+    if lbl_colname is None:
+        lbl = lbl.iloc[:,0]
+    else:
+        lbl = lbl.loc[:,lbl_colname]
+
+    if topn_genes is not None:
+        genesize = cnt.values.sum(axis = 0)
+        topn_genes = np.min((topn_genes,genesize.shape[0]))
+        sel = np.argsort(genesize)[::-1]
+        sel = sel[0:topn_genes]
+        cnt = cnt.iloc[:,sel]
+
+    dataset = CountData(cnt = cnt, lbl = lbl)
+
+    if filter_genes:
+        dataset.filter_genes()
+
+    dataset.filter_bad(min_counts, min_cells)
+
+    return dataset
+
+
+def make_st_dataset(cnt_pths : List[str],
+                    topn_genes : bool = None) :
+
+    cnt = utils.make_joint_matrix(cnt_pths)
+
+    if topn_genes is not None:
+        genesize = cnt.values.sum(axis = 0)
+        topn_genes = np.min((topn_genes,genesize.shape[0]))
+        sel = np.argsort(genesize)[::-1]
+        sel = sel[0:topn_genes]
+        cnt = cnt.iloc[:,sel]
+
+
+    dataset = CountData(cnt)
+
+    return dataset
+
 

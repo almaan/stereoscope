@@ -8,9 +8,12 @@ from typing import NoReturn
 
 import torch as t
 import numpy as np
+import pandas as pd
 
 from torch.utils.data import DataLoader
-import stsc.utils
+import stsc.utils as utils
+import stsc.models as M
+import stsc.datasets as D
 
 def fit(model,
         dataset,
@@ -26,8 +29,8 @@ def fit(model,
     optim = t.optim.Adam(model.parameters(),
                          lr = learning_rate)
 
-    trackLoss = LossTracker()
-    progressBar = SimpleProgressBar(epochs,
+    trackLoss = utils.LossTracker()
+    progressBar = utils.SimpleProgressBar(epochs,
                                     silent_mode = silent_mode,
                                     length = 20)
 
@@ -84,12 +87,14 @@ def fit_st_data(st_cnt_pths,
                 st_batch_size,
                 silent_mode,
                 st_from_model,
+                topn_genes = None,
                 **kwargs):
 
     if not all([osp.exists(x) for x in st_cnt_pths]):
         sys.exit(-1)
 
-    st_data = utils.make_st_dataset(st_cnt_pths)
+    st_data = D.make_st_dataset(st_cnt_pths,
+                                topn_genes = topn_genes)
 
     inter = st_data.intersect(R.index)
     R = R.loc[inter,:]
@@ -98,7 +103,8 @@ def fit_st_data(st_cnt_pths,
     st_model = M.STModel(st_data.M,
                          R = R.values,
                          logits = logits.values,
-                         device = device)
+                         device = device,
+                         )
 
     if st_from_model is not None and osp.exists(st_from_model):
         st_model.load_state_dict(t.load(st_from_model))
@@ -132,6 +138,7 @@ def fit_sc_data(sc_cnt_pth,
                 sc_batch_size,
                 silent_mode,
                 sc_from_model,
+                topn_genes = None,
                 **kwargs):
 
     if not osp.exists(sc_cnt_pth):
@@ -142,13 +149,14 @@ def fit_sc_data(sc_cnt_pth,
 
 
 
-    sc_data = utils.make_sc_dataset(sc_cnt_pth,
+    sc_data = D.make_sc_dataset(sc_cnt_pth,
                                     sc_lbl_pth,
+                                    topn_genes,
                                     )
 
     sc_model = M.ScModel(n_genes = sc_data.G,
-                    n_celltypes = sc_data.Z,
-                    device = device)
+                         n_celltypes = sc_data.Z,
+                         device = device)
 
     if sc_from_model is not None and osp.exists(sc_from_model):
         sc_model.load_state_dict(t.load(sc_from_model))

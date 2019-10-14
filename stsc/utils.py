@@ -2,7 +2,7 @@
 
 import torch as t
 from torch.utils.data import DataLoader
-
+import matplotlib.pyplot as plt
 
 import numpy as np
 import pandas as pd
@@ -14,6 +14,7 @@ import os.path as osp
 import re
 import datetime
 import stsc.datasets as D
+import stsc.models as M
 
 def generate_identifier():
    return re.sub(' |:','',str(datetime.datetime.today()))
@@ -191,66 +192,66 @@ class LossTracker:
     def current(self,):
         return self.history[-1]
 
-def fit(model,
-        dataset,
-        device,
-        epochs : int,
-        learning_rate : float,
-        batch_size : int = None,
-        silent_mode : bool = False,
-        **kwargs
-        ) -> NoReturn:
-
-    model.to(device)
-    optim = t.optim.Adam(model.parameters(),
-                         lr = learning_rate)
-
-    trackLoss = LossTracker()
-    progressBar = SimpleProgressBar(epochs,
-                                    silent_mode = silent_mode,
-                                    length = 20)
-
-    # use full dataset if no Batch Size specified
-    if batch_size is None:
-        batch_size = dataset.M
-    else:
-        batch_size = int(np.min((batch_size,dataset.M)))
-
-    dataloader = DataLoader(dataset,
-                            batch_size = batch_size,
-                            shuffle = False,
-                            )
-
-    # Use try/except to catch SIGINT for early interuption
-    try:
-        for epoch in range(epochs):
-            epoch_loss = 0.0
-            for batch in dataloader:
-
-                for k,v in batch.items():
-                    batch[k] = v.to(device)
-
-                batch['x'].requires_grad = True
-                # reset gradients
-                optim.zero_grad()
-                # compute loss
-                loss = model.forward(**batch)
-                epoch_loss += loss.item()
-                # compute gradients
-                loss.backward()
-                # update parameters based on gradients
-                optim.step()
-
-            progressBar(epoch, epoch_loss)
-            trackLoss(epoch_loss)
-
-        # newline after complettion
-        print('\n')
-
-    except KeyboardInterrupt:
-        print(f"\n\nPress Ctrl+C again to interrupt whole process")
-
-    return trackLoss.history
+#def fit(model,
+#        dataset,
+#        device,
+#        epochs : int,
+#        learning_rate : float,
+#        batch_size : int = None,
+#        silent_mode : bool = False,
+#        **kwargs
+#        ) -> NoReturn:
+#
+#    model.to(device)
+#    optim = t.optim.Adam(model.parameters(),
+#                         lr = learning_rate)
+#
+#    trackLoss = LossTracker()
+#    progressBar = SimpleProgressBar(epochs,
+#                                    silent_mode = silent_mode,
+#                                    length = 20)
+#
+#    # use full dataset if no Batch Size specified
+#    if batch_size is None:
+#        batch_size = dataset.M
+#    else:
+#        batch_size = int(np.min((batch_size,dataset.M)))
+#
+#    dataloader = DataLoader(dataset,
+#                            batch_size = batch_size,
+#                            shuffle = False,
+#                            )
+#
+#    # Use try/except to catch SIGINT for early interuption
+#    try:
+#        for epoch in range(epochs):
+#            epoch_loss = 0.0
+#            for batch in dataloader:
+#
+#                for k,v in batch.items():
+#                    batch[k] = v.to(device)
+#
+#                batch['x'].requires_grad = True
+#                # reset gradients
+#                optim.zero_grad()
+#                # compute loss
+#                loss = model.forward(**batch)
+#                epoch_loss += loss.item()
+#                # compute gradients
+#                loss.backward()
+#                # update parameters based on gradients
+#                optim.step()
+#
+#            progressBar(epoch, epoch_loss)
+#            trackLoss(epoch_loss)
+#
+#        # newline after complettion
+#        print('\n')
+#
+#    except KeyboardInterrupt:
+#        print(f"\n\nPress Ctrl+C again to interrupt whole process")
+#
+#    return trackLoss.history
 
 def read_file(file_name) :
     file = pd.read_csv(file_name,
@@ -269,11 +270,12 @@ def write_file(file,opth):
 
 def make_sc_dataset(cnt_pth : str,
                     lbl_pth : str,
-                    n_genes : int = None,
+                    topn_genes : int = None,
                     lbl_colname : str = 'bio_celltype',
                     filter_genes : bool = False,
                     min_counts : int = 0,
-                    min_cells : int = 0):
+                    min_cells : int = 0,
+                    ):
 
 
     cnt = read_file(cnt_pth)
@@ -283,14 +285,12 @@ def make_sc_dataset(cnt_pth : str,
     else:
         lbl = lbl.loc[:,lbl_colname]
 
-    if n_genes is not None:
-        libsize = cnt.values.sum(axis = 1)
-        n_genes = np.min((n_genes,libsize.shape[0]))
-        sel = np.argsort(libsize)[::-1]
-        sel = sel[0:n_genes]
-        cnt = cnt.iloc[sel,:]
-        lbl = lbl.iloc[sel,:]
-
+    if topn_genes is not None:
+        genesize = cnt.values.sum(axis = 0)
+        topn_genes = np.min((topn_genes,genesize.shape[0]))
+        sel = np.argsort(genesize)[::-1]
+        sel = sel[0:topn_genes]
+        cnt = cnt.iloc[:,sel]
 
     dataset = D.CountData(cnt = cnt, lbl = lbl)
 
@@ -320,12 +320,3 @@ def make_st_dataset(cnt_pths : List[str],
     return dataset
 
 
-
-#
-#def fit_st(self,
-#           cnt_pth : List[str],
-#           epochs,
-#           batch_size,
-#           silent_mode : bool = False,
-#          ):
-#    pass

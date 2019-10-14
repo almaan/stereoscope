@@ -139,6 +139,15 @@ def main():
                      help = 'scale intensities internally',
                     )
 
+    prs.add_argument('-fl','--filter_low',
+                     required = False,
+                     default = False,
+                     action = 'store_true',
+                     help = 'filter low values',
+                    )
+
+
+
     args = prs.parse_args()
     imgpth = args.image
     tmatpth = args.transformation_matrix
@@ -214,6 +223,9 @@ def main():
 
         if args.scale_internally:
             rgbs[:,3] /= rgbs[:,3].max()
+
+        if args.filter_low:
+            rgbs[rgbs[:,3] < 0.1,3] = 0.0
 
 
         eimg = Image.new("RGBA",
