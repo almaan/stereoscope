@@ -344,11 +344,13 @@ def look(args,):
             section_id = (inside if sort_by == 'ct' else outside )
             celltype_id = (outside if sort_by == 'ct' else inside)
 
-            vmin = (wlist[section_id].iloc[:,celltype_id].min() if \
-                    args.scale_by == 'i' else wlist[section_id].values.min())
+            alpha = 0.01
 
-            vmax = (wlist[section_id].iloc[:,celltype_id].max() if \
-                    args.scale_by == 'i' else wlist[section_id].values.max())
+            vmin = (np.quantile(wlist[section_id].iloc[:,celltype_id],alpha) if \
+                    args.scale_by == 'i' else np.quantile(wlist[section_id].values,alpha))
+
+            vmax = (np.quantile(wlist[section_id].iloc[:,celltype_id],1-alpha) if \
+                    args.scale_by == 'i' else np.quantile(wlist[section_id].values,1-alpha))
 
             ax_prop(ax[inside],
                     crdlist[section_id][:,0],
@@ -356,16 +358,16 @@ def look(args,):
                     pp = wlist[section_id].iloc[:,celltype_id],
                     mn = mncrd[section_id],
                     mx = mxcrd[section_id],
+                    ms = args.marker_size,
                     vmin = vmin,
                     vmax = vmax,
                     )
 
             ax[inside].set_title(titles[inside])
 
-        for hide in range(inner,ax.shape[0]):
-           hide_spines(ax[hide])
+            hide_spines(ax[inner:ax.shape[0]])
 
-
+        if not osp.exists(osp.dirname(fignames[outside])): os.mkdir(osp.dirname(fignames[outside]))
         fig.savefig(fignames[outside])
 
     if args.compress_method is not None:
@@ -412,7 +414,6 @@ def look(args,):
             n_cmpr_cols = args.n_cols
             n_cmpr_rows = np.ceil(n_sections / n_cmpr_cols).astype(int)
             figpth = osp.join(odirs[0],'joint.compressed.png')
-            print(figpth)
             if not osp.exists(odirs[0]): os.mkdir(odirs[0])
 
             figsize = ((n_cmpr_cols + 1) * 3.2, (n_cmpr_rows +1) * 3.2 + 1.0)
