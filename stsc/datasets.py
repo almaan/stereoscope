@@ -143,7 +143,7 @@ def make_sc_dataset(cnt_pth : str,
         sel = sel[0:topn_genes]
         cnt = cnt.iloc[:,sel]
 
-    if gene_list is not None:
+    if gene_list_pth is not None:
         with open(gene_list_pth,'r+') as fopen:
             gene_list = fopen.readlines()
 
