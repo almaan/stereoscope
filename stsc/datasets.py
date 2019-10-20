@@ -115,6 +115,7 @@ class CountData(Dataset):
 def make_sc_dataset(cnt_pth : str,
                     lbl_pth : str,
                     topn_genes : int = None,
+                    gene_list_pth : str = None,
                     lbl_colname : str = 'bio_celltype',
                     filter_genes : bool = False,
                     min_counts : int = 0,
@@ -124,6 +125,11 @@ def make_sc_dataset(cnt_pth : str,
 
     cnt = utils.read_file(cnt_pth)
     lbl = utils.read_file(lbl_pth)
+
+    inter = cnt.index.intersection(lbl.index)
+    cnt = cnt.loc[inter,:]
+    lbl = lbl.loc[inter,:]
+
 
     if lbl_colname is None:
         lbl = lbl.iloc[:,0]
@@ -136,6 +142,15 @@ def make_sc_dataset(cnt_pth : str,
         sel = np.argsort(genesize)[::-1]
         sel = sel[0:topn_genes]
         cnt = cnt.iloc[:,sel]
+
+    if gene_list is not None:
+        with open(gene_list_pth,'r+') as fopen:
+            gene_list = fopen.readlines()
+
+        gene_list = pd.Index([ x.replace('\n','') for x in gene_list ])
+        sel = cnt.columns.intersection(gene_list)
+        cnt = cnt.iloc[:,sel]
+
 
     dataset = CountData(cnt = cnt, lbl = lbl)
 

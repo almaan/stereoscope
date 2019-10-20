@@ -178,6 +178,16 @@ def make_parser():
                         help = ''.join(["use gpu",
                                         ]))
 
+    run_parser.add_argument('-gl','--gene_list',
+                        required = False,
+                        default = None,
+                        type = str,
+                        help = ''.join(["path to list of genes",
+                                        " to use",
+                                        ]))
+
+
+
 # Look Parser Arguments -----------------------------------------------
 
     look_parser.add_argument("-pp","--proportions_path",

@@ -39,7 +39,6 @@ def fit(model,
         batch_size = dataset.M
     else:
         batch_size = int(np.min((batch_size,dataset.M)))
-
     dataloader = DataLoader(dataset,
                             batch_size = batch_size,
                             shuffle = False,
@@ -146,8 +145,6 @@ def fit_sc_data(sc_cnt_pth,
 
     if not osp.exists(sc_lbl_pth):
         sys.exit(-1)
-
-
 
     sc_data = D.make_sc_dataset(sc_cnt_pth,
                                     sc_lbl_pth,
