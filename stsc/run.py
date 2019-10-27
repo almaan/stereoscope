@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 
-import os.path as osp
-from os import mkdir
 import sys
+from os import mkdir
+import os.path as osp
+import argparse as arp
+
 
 import torch as t
+from torch.cuda import is_available
+from torch.utils.data import Dataset
 
 import numpy as np
 import pandas as pd
 
-from torch.cuda import is_available
-from torch.utils.data import Dataset
 
 import stsc.fit as fit
 import stsc.datasets as D
@@ -19,39 +21,49 @@ import stsc.utils as utils
 import stsc.parser as parser
 
 
-def run(prs,args):
+def run(prs : arp.ArgumentParser,
+        args : arp.Namespace,
+       )-> None:
 
+    """Run analysis
+
+    Depending on specified arguments performs
+    either single cell parameter estimation,
+    ST-data proportion estimates or both.
+
+    Parameter:
+    ---------
+    prs : argparse.ArgumentParser
+    args : argparse.Namespace
+
+    """
+
+    # generate unique identifier for analysis
     timestamp = utils.generate_identifier()
 
+    # ensure arguments are provided
     if len(sys.argv[1::]) < 2:
         prs.print_help()
         sys.exit(-1)
 
+    # create output directory if non-existant
     if not osp.exists(args.out_dir):
         mkdir(args.out_dir)
 
-    log = utils.Logger(osp.join(args.out_dir,'.'.join(['stsc',timestamp,'log'])))
+    # instatiate logger
+    log = utils.Logger(osp.join(args.out_dir,
+                                '.'.join(['stsc',
+                                          timestamp,
+                                          'log'])
+                               )
+                      )
 
-    args.st_cnt = (args.st_cnt if isinstance(args.st_cnt,list) else \
-                    [args.st_cnt])
+    # convert args to list if not
+    args.st_cnt = (args.st_cnt if \
+                   isinstance(args.st_cnt,list) else \
+                   [args.st_cnt])
 
-    input_args = dict(sc_cnt_pth = args.sc_cnt,
-                      sc_lbl_pth = args.sc_labels,
-                      st_cnt_pths = args.st_cnt,
-                      sc_batch_size = args.sc_batch_size,
-                      topn_genes = args.topn_genes,
-                      gene_list_pth = args.gene_list,
-                      filter_genes = args.filter_genes,
-                      min_counts = args.min_counts,
-                      learning_rate = args.learning_rate,
-                      st_batch_size = args.st_batch_size,
-                      sc_epochs = args.sc_epochs,
-                      st_epochs = args.st_epochs,
-                      silent_mode = args.silent_mode,
-                      st_from_model = args.st_model,
-                      sc_from_model = args.sc_model,
-                     )
-
+    # set device
     if args.gpu:
         device = t.device('cuda')
     else:
@@ -59,43 +71,124 @@ def run(prs,args):
 
     device = (device if is_available() else t.device('cpu'))
     log.info("Using device {}".format(str(device)))
-    input_args.update({'device':device})
 
+    # If parameters should be fitted from sc data
     if not all(args.sc_fit):
-        log.info("fitting sc data | count file : {} |  labels file : {}".format(args.sc_cnt,args.sc_labels))
+        log.info(' | '.join(["fitting sc data",
+                             "count file : {}".format(args.sc_cnt),
+                             "labels file : {}".format(args.sc_labels),
+                            ])
+                )
+
+        # control that paths to sc data exists
+        if not any([osp.exists(args.sc_cnt_pth),
+                    osp.exists(args.sc_lbl_pth)]):
+
+            log.error(' '.join(["One or more of the specified paths to",
+                                "the sc data does not exist"]))
+            sys.exit(-1)
+
+        # load pre-fitted model if provided
         if args.sc_model is not None:
             log.info("loading state from provided sc_model")
 
-        R, logits,sc_model = fit.fit_sc_data(**input_args)
+        # Create data set for single cell data
+        sc_data = D.make_sc_dataset(args.sc_cnt_pth,
+                                    args.sc_lbl_pth,
+                                    topn_genes = args.topn_genes,
+                                    gene_list_pth = args.gene_list,
+                                    lbl_colname = args.lbl_colname,
+                                    filter_genes = args.filter_genes,
+                                    min_counts = args.min_sc_counts,
+                                    min_cells = args.min_cells,
+                                    )
 
-        oname_R = osp.join(args.out_dir,'.'.join(['R',timestamp,'tsv']))
-        oname_logits = osp.join(args.out_dir,'.'.join(['logits',timestamp,'tsv']))
-        oname_sc_model = osp.join(args.out_dir,'.'.join(['sc_model',timestamp,'pt']))
+        log.info(' '.join(["SC data GENES : {} ".format(sc_data.G),
+                           "SC data CELLS : {} ".format(sc_data.M),
+                           "SC data TYPES : {} ".format(sc_data.K),
+                           ])
+                )
+
+        # estimate parameters from single cell data
+        R, logits, sc_model = fit.fit_sc_data(sc_data,
+                                              sc_epochs = args.sc_epochs,
+                                              sc_batch_size = args.sc_batch_size,
+                                              learning_rate = args.learning_rate,
+                                              sc_from_model = args.sc_model,
+                                              device = device,
+                                             )
+        # save sc model
+        oname_sc_model = osp.join(args.out_dir,
+                                  '.'.join(['sc_model',timestamp,'pt']))
+
+        t.save(sc_model.state_dict(),oname_sc_model)
+
+        # save estimated parameters
+        oname_R = osp.join(args.out_dir,
+                           '.'.join(['R',timestamp,'tsv']))
+
+        oname_logits = osp.join(args.out_dir,
+                                '.'.join(['logits',timestamp,'tsv']))
 
         utils.write_file(R,oname_R)
         utils.write_file(logits,oname_logits)
-        t.save(sc_model.state_dict(),oname_sc_model)
 
+    # Load already estimated single cell parameters
     elif args.st_cnt is not None:
-        log.info("load sc parameter |  rates (R) : {} | logodds (logits) : {}".format(*args.sc_fit))
+        log.info(' | '.join(["load sc parameter",
+                             "rates (R) : {}".format(args.sc_fit[0]),
+                             "logodds (logits) : {}".format(args.sc_fit[1]),
+                            ])
+                )
         R = utils.read_file(args.sc_fit[0])
         logits = utils.read_file(args.sc_fit[1])
 
+    # If ST data is provided estiamte proportions
     if args.st_cnt is not None:
-
+        # generate identifiying tag for each section
         sectiontag = list(map(lambda x: '.'.join(osp.basename(x).split('.')[0:-1]),args.st_cnt))
         log.info("fit st data section(s) : {}".format(args.st_cnt))
+
+        # check that provided files exist
+        if not all([osp.exists(x) for x in st_cnt_pths]):
+            log.error("Some of the provided ST-data paths does not exist")
+            sys.exit(-1)
 
         if args.st_model is not None:
             log.info("loading state from provided st_model")
 
-        wlist,st_model = fit.fit_st_data(R = R,
-                                        logits = logits,
-                                         **input_args)
+        # create data set for st data
+        st_data =  D.make_st_dataset(st_cnt_pths,
+                                     topn_genes = args.topn_genes,
+                                     min_counts = args.min_st_counts,
+                                     min_spots = args.min_spots,
+                                     filter_genes = args.filter_genes,
+                                    )
 
-        oname_st_model = osp.join(args.out_dir,'.'.join(['st_model',timestamp,'pt']))
+        log.info(' '.join(["ST data GENES : {} ".format(st_data.G),
+                           "ST data SPOTS : {} ".format(st_data.M),
+                           ])
+                )
+
+        # estimate proportions of cell types within st data
+        wlist,st_model = fit.fit_st_data(st_data,
+                                         R = R,
+                                         logits = logits,
+                                         st_epochs = args.st_epochs,
+                                         learning_rate = args.learning_rate,
+                                         silent_mode = args.silent_mode,
+                                         st_from_model = args.st_model,
+                                         device = device,
+                                        )
+
+
+        # save st model
+        oname_st_model = osp.join(args.out_dir,
+                                  '.'.join(['st_model',timestamp,'pt']))
+
         t.save(st_model.state_dict(),oname_st_model)
 
+        # save st data proportion estimates results
         for s in range(len(wlist)):
             section_dir = osp.join(args.out_dir,sectiontag[s])
             if not osp.exists(section_dir):
@@ -105,5 +198,4 @@ def run(prs,args):
             log.info("saving proportions for section {} to {}".format(sectiontag[s],
                                                                       oname_W))
             utils.write_file(wlist[s],oname_W)
-
 

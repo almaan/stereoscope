@@ -29,6 +29,7 @@ def make_joint_matrix(pths):
 
     for k,pth in enumerate(pths):
         cnt = read_file(pth)
+        cnt.index = pd.Index([x.replace('_','&-') for x in cnt.index.values])
         mlist.append(cnt)
         index = index.append(pd.Index([str(k) + '_' + x for x in cnt.index ] ))
         genes = genes.union(cnt.columns)
@@ -60,16 +61,15 @@ def split_joint_matrix(jmat):
     for k in uidx:
         sel = (idx == k)
         tm = jmat.iloc[sel,:]
-        tm.index = name[sel]
+        tm.index = pd.Index([x.replace('&-','_') for x in name[sel].values])
         matlist.append(tm)
 
     return matlist
 
 def Logger(logname,):
-    """
+    """Logger for steroscope run
 
-    Initiate Logger
-        Parameters
+    Parameter
     ----------
         logname : str
             full name of file to which log should be saved
@@ -192,67 +192,6 @@ class LossTracker:
     def current(self,):
         return self.history[-1]
 
-#def fit(model,
-#        dataset,
-#        device,
-#        epochs : int,
-#        learning_rate : float,
-#        batch_size : int = None,
-#        silent_mode : bool = False,
-#        **kwargs
-#        ) -> NoReturn:
-#
-#    model.to(device)
-#    optim = t.optim.Adam(model.parameters(),
-#                         lr = learning_rate)
-#
-#    trackLoss = LossTracker()
-#    progressBar = SimpleProgressBar(epochs,
-#                                    silent_mode = silent_mode,
-#                                    length = 20)
-#
-#    # use full dataset if no Batch Size specified
-#    if batch_size is None:
-#        batch_size = dataset.M
-#    else:
-#        batch_size = int(np.min((batch_size,dataset.M)))
-#
-#    dataloader = DataLoader(dataset,
-#                            batch_size = batch_size,
-#                            shuffle = False,
-#                            )
-#
-#    # Use try/except to catch SIGINT for early interuption
-#    try:
-#        for epoch in range(epochs):
-#            epoch_loss = 0.0
-#            for batch in dataloader:
-#
-#                for k,v in batch.items():
-#                    batch[k] = v.to(device)
-#
-#                batch['x'].requires_grad = True
-#                # reset gradients
-#                optim.zero_grad()
-#                # compute loss
-#                loss = model.forward(**batch)
-#                epoch_loss += loss.item()
-#                # compute gradients
-#                loss.backward()
-#                # update parameters based on gradients
-#                optim.step()
-#
-#            progressBar(epoch, epoch_loss)
-#            trackLoss(epoch_loss)
-#
-#        # newline after complettion
-#        print('\n')
-#
-#    except KeyboardInterrupt:
-#        print(f"\n\nPress Ctrl+C again to interrupt whole process")
-#
-#    return trackLoss.history
-
 def read_file(file_name) :
     file = pd.read_csv(file_name,
                         header = 0,
@@ -265,58 +204,5 @@ def write_file(file,opth):
                 index = True,
                 header = True,
                 sep = '\t')
-
-
-
-def make_sc_dataset(cnt_pth : str,
-                    lbl_pth : str,
-                    topn_genes : int = None,
-                    lbl_colname : str = 'bio_celltype',
-                    filter_genes : bool = False,
-                    min_counts : int = 0,
-                    min_cells : int = 0,
-                    ):
-
-
-    cnt = read_file(cnt_pth)
-    lbl = read_file(lbl_pth)
-    if lbl_colname is None:
-        lbl = lbl.iloc[:,0]
-    else:
-        lbl = lbl.loc[:,lbl_colname]
-
-    if topn_genes is not None:
-        genesize = cnt.values.sum(axis = 0)
-        topn_genes = np.min((topn_genes,genesize.shape[0]))
-        sel = np.argsort(genesize)[::-1]
-        sel = sel[0:topn_genes]
-        cnt = cnt.iloc[:,sel]
-
-    dataset = D.CountData(cnt = cnt, lbl = lbl)
-
-    if filter_genes:
-        dataset.filter_genes()
-
-    dataset.filter_bad(min_counts, min_cells)
-
-    return dataset
-
-
-def make_st_dataset(cnt_pths : List[str],
-                    n_genes : bool = None) :
-
-    cnt = make_joint_matrix(cnt_pths)
-
-    if n_genes is not None:
-        libsize = cnt.values.sum(axis = 1)
-        n_genes = np.min((n_genes,libsize.shape[0]))
-        sel = np.argsort(libsize)[::-1]
-        sel = sel[0:n_genes]
-        cnt = cnt.iloc[:,sel]
-        lbl = lbl.iloc[:,sel]
-
-    dataset = D.CountData(cnt)
-
-    return dataset
 
 

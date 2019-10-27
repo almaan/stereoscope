@@ -77,23 +77,16 @@ def fit(model,
 
 
 
-def fit_st_data(st_cnt_pths,
-                R,
-                logits,
-                device,
-                st_epochs,
-                learning_rate,
-                st_batch_size,
-                silent_mode,
-                st_from_model,
-                topn_genes = None,
+def fit_st_data(st_data : D.CountData,
+                R : pd.DataFrame,
+                logits : pd.DataFrame,
+                device : t.device,
+                st_epochs : int,
+                learning_rate : float,
+                st_batch_size : int,
+                silent_mode : bool,
+                st_from_model : str,
                 **kwargs):
-
-    if not all([osp.exists(x) for x in st_cnt_pths]):
-        sys.exit(-1)
-
-    st_data = D.make_st_dataset(st_cnt_pths,
-                                topn_genes = topn_genes)
 
     inter = st_data.intersect(R.index)
     R = R.loc[inter,:]
@@ -129,15 +122,13 @@ def fit_st_data(st_cnt_pths,
 
     return wlist,st_model
 
-def fit_sc_data(sc_cnt_pth,
-                sc_lbl_pth,
-                device,
-                sc_epochs,
-                learning_rate,
-                sc_batch_size,
-                silent_mode,
-                sc_from_model,
-                topn_genes = None,
+def fit_sc_data(sc_data : D.CountData,
+                sc_epochs : int,
+                sc_batch_size : int,
+                learning_rate: float,
+                silent_mode : bool,
+                sc_from_model : str,
+                device : t.device,
                 **kwargs):
 
     if not osp.exists(sc_cnt_pth):
@@ -145,11 +136,6 @@ def fit_sc_data(sc_cnt_pth,
 
     if not osp.exists(sc_lbl_pth):
         sys.exit(-1)
-
-    sc_data = D.make_sc_dataset(sc_cnt_pth,
-                                    sc_lbl_pth,
-                                    topn_genes,
-                                    )
 
     sc_model = M.ScModel(n_genes = sc_data.G,
                          n_celltypes = sc_data.Z,

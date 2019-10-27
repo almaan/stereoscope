@@ -16,40 +16,56 @@ import os.path as osp
 
 
 class ScModel(nn.Module):
+    """ Model for singel cell data """
 
     def __init__(self,
-                 n_genes,
-                 n_celltypes,
-                 device,
-                 ):
+                 n_genes : int,
+                 n_celltypes : int,
+                 device : t.device,
+                 )->None:
         super().__init__()
 
         # Get dimensions from data
         self.K = n_celltypes
         self.G = n_genes
 
-        # Define and initialize parameters to be estimated
+        # Define parameters to be estimated
         self.theta = Parameter(t.Tensor(self.G,self.K).to(device))
-        nn.init.normal_(self.theta,mean = 0.0, std = 1.0)
         self.R = t.Tensor(self.G,self.K).to(device)
         self.o = Parameter(t.Tensor(self.G,1).to(device))
-        nn.init.normal_(self.o, mean = 0.0, std = 1.0)
+
+        # Initialize parameters
+        nn.init.normal_(self.o,
+                        mean = 0.0,
+                        std = 1.0)
+
+        nn.init.normal_(self.theta,
+                        mean = 0.0,
+                        std = 1.0)
+
+
 
         # Functions to be used
         self.nb = t.distributions.NegativeBinomial
         self.softpl = nn.functional.softplus
         self.logsig = nn.functional.logsigmoid
 
-    def _llnb(self,x,meta,sf):
-        """Log Likelihood for function for negative binomial model
+    def _llnb(self,
+              x : t.Tensor,
+              meta : t.Tensor,
+              sf : t.Tensor,
+             ) -> t.Tensor :
 
-        Returns the log likelihood for rates and logodds taken as a function
-        of the observed counts.  Assumes that single cell data is negative
+        """Log Likelihood for NB-model
+
+        Returns the log likelihood for rates and logodds
+        taken as a function of the observed counts.
+        Assumes that single cell data is negative
         binomial distributed.
 
         Returns
         -------
-        ll - log likelihood
+        The log likelihood
 
         """
         log_unnormalized_prob = (sf*self.R[:,meta] * self.logsig(-self.o) +
@@ -90,9 +106,9 @@ class STModel(nn.Module):
                  n_spots: int,
                  R : np.ndarray,
                  logits : np.ndarray,
-                 device,
+                 device : t.device,
                  **kwargs,
-                 ):
+                 )->None:
 
         super().__init__()
 
@@ -128,11 +144,14 @@ class STModel(nn.Module):
         self.model_ll = 0.0
 
 
-    def noise_loss(self,):
+    def noise_loss(self,
+                  )-> t.Tensor:
         """Regularizing term when noise is included"""
         return -0.5*t.sum(t.pow(self.eta,2))
 
-    def _llnb(self,x):
+    def _llnb(self,
+              x : t.Tensor,
+              )->t.Tensor:
         """Log Likelihood function for standard model"""
 
         log_unnormalized_prob = self.r * self.lsig(-self.o) + \
@@ -149,7 +168,9 @@ class STModel(nn.Module):
 
         return ll
 
-    def _lfun(self,x):
+    def _lfun(self,
+              x : t.Tensor,
+              )-> t.Tensor:
         """Loss Function
 
         Composed of the likelihood and prior of
@@ -172,7 +193,8 @@ class STModel(nn.Module):
 
         return  - data_loss - noise_loss
 
-    def __str__(self,):
+    def __str__(self,
+               )-> str:
         return f"st_model"
 
     def forward(self,

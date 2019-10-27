@@ -12,5 +12,9 @@ def main():
         run(prs,args)
     elif args.command == 'look':
         look(args)
+    else:
+        print(' '.join(["Use the command 'steroscope run' to analyze",
+                        "your data. Use 'steroescope look' to visualize",
+                        "your results."]))
 
 

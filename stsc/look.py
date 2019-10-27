@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 plt.rcParams.update({
     "figure.max_open_warning" : 200,
-    "font.size" : 25,
+    "font.size" : 15,
     "font.family": "serif",  # use serif/main font for text elements
 })
 
@@ -401,7 +401,8 @@ def look(args,):
             for s in range(n_sections):
                 figpth = osp.join(odirs[s],'.'.join([snames[s],'compressed.png']))
                 if not osp.isdir(odirs[s]): os.mkdir(odirs[s])
-                fig,ax = plt.subplots(1,1)
+                figsize = (10,10)
+                fig,ax = plt.subplots(1,1,figsize = figsize)
                 ax_compressed(ax,crdlist[s][:,0],crdlist[s][:,1],
                               scmpr[s],
                               hexagonal = args.hexagonal)

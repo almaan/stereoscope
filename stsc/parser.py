@@ -27,16 +27,26 @@ def make_parser():
                         required = False,
                         type = str,
                         help = ''.join(["path to single cell",
-                               " labels file. Should be on",
-                               ]))
+                                        " labels file. Should be on",
+                            ]))
+
+    run_parser.add_argument('-lcn','--label_colname',
+                        required = False,
+                        default = 'bio_celltype',
+                        type = str,
+                        help = ''.join(["name of columns that",
+                                        " cell type labels are",
+                                        " listed",
+                            ]))
+
 
     run_parser.add_argument('-scb','--sc_batch_size',
                         required = False,
                         default = None,
                         type = int,
                         help = ''.join(["batch size for",
-                               " single cell data set",
-                               ]))
+                                        " single cell data set",
+                            ]))
 
     run_parser.add_argument('-stc','--st_cnt',
                         required = False,
@@ -57,7 +67,6 @@ def make_parser():
                         default = None,
                         help = ''.join(["path to already fitted",
                                        " sc model"]))
-
 
 
     run_parser.add_argument('-sce','--sc_epochs',
@@ -84,11 +93,11 @@ def make_parser():
                         default = [None,None],
                         nargs = 2,
                         help =''.join(["parameters fitted",
-                               " from single cell",
-                               " data. First argument",
-                               " should be path to",
-                               " R-matrix and second",
-                               " to logit vector"])
+                                       " from single cell",
+                                       " data. First argument",
+                                       " should be path to",
+                                       " R-matrix and second",
+                                       " to logit vector"])
                                )
 
 
@@ -149,9 +158,19 @@ def make_parser():
                                         ]))
 
 
-    run_parser.add_argument("-mg","--min_counts",
+    run_parser.add_argument("-mscc","--min_sc_counts",
                         required = False,
                         default = 300,
+                        type = float,
+                        help = ''.join([f"minimum number of ",
+                                        f" counts for single cells",
+                                        f" to be included in",
+                                        f" the analysis",
+                                        ]))
+
+    run_parser.add_argument("-mstc","--min_st_counts",
+                        required = False,
+                        default = 0,
                         type = float,
                         help = ''.join([f"minimum number of ",
                                         f" counts for single cells",
@@ -166,7 +185,17 @@ def make_parser():
                         type = float,
                         help = ''.join([f"minimum number of ",
                                         f" cells for genes",
-                                        f" to be included in",
+                                        f" to be observed in",
+                                        f" the analysis",
+                                        ]))
+
+    run_parser.add_argument("-ms","--min_spots",
+                        required = False,
+                        default = 0.0,
+                        type = float,
+                        help = ''.join([f"minimum number of ",
+                                        f" spots for genes",
+                                        f" to be observed in",
                                         f" the analysis",
                                         ]))
 
