@@ -4,5 +4,6 @@ stsc/*.sh
 *.bak
 visual/map2he/imgs/
 STereoSCope.egg-info/
+stsc/comparison/{joint_st_sets,sensitivity}.py
 build/
 dist/
