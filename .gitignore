@@ -8,4 +8,4 @@ build/
 dist/
 ./DWLS/
 ./deconvSeq/
-./comparison/old/
+./comparison/old
