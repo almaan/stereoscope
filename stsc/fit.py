@@ -129,7 +129,7 @@ def fit_st_data(st_data : D.CountData,
                 st_batch_size : int,
                 silent_mode : bool = False,
                 st_from_model : str = None,
-                **kwargs)->Dict:
+                **kwargs)->Dict[str,Union[pd.DataFrame,M.STModel]]:
     """Fit ST Data model
 
     Estimate proportion values for
@@ -226,7 +226,9 @@ def fit_sc_data(sc_data : D.CountData,
                 learning_rate: float,
                 silent_mode : bool = False,
                 sc_from_model : str = None,
-                **kwargs)->Dict:
+                **kwargs,
+                )->Dict[str,Union[pd.DataFrame,
+                                  M.ScModel]]:
 
     """Fit single cell data
 

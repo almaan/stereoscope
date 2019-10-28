@@ -3,98 +3,105 @@
 import os
 import os.path as osp
 import argparse as arp
+from typing import List,Dict,NoReturn,Callable,Tuple
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import scipy.stats as st
+from scipy.stats.stats import pearsonr
+
 
 import matplotlib.pyplot as plt
 
-from typing import List,Dict
 
 plt.rcParams.update({
-        "font.family": "serif",
+        "font.family": "calibri",
         "font.size": 15,
-        "text.usetex": True,                    # use latex default serif font
-        "font.sans-serif": ["DejaVu Sans"],  # use a specific sans-serif font
 })
 
+def _get_method_name(pth : str,
+                    ):
+    return osp.basename(pth)
 
-def make_fake_res(n_data,
-                  n_types,
-                  n_sets):
+def _rmse(estimate : np.ndarray,
+          truth : np.ndarray,
+         )->np.ndarray:
+    """Get RMSE
 
-    def make_single(n_types,
-                    n_data,
-                    columns,
-                    index):
+    Compute RMSE between estimate
+    and true proportion values.
 
+    RMSE is computed spotwise,
+    hence one RMSE value for
+    each spot its obtained
 
-        alpha = np.random.uniform(0.1,1)
+    See :
+    https://en.wikipedia.org/wiki/Root-mean-square_deviation
 
-        tmp = np.random.dirichlet(np.ones(n_types)*alpha, size= (n_data,))
-        tmp = tmp / tmp.sum(axis = 1).reshape(-1,1)
+    for information regarding RMSE
 
-        tmp = pd.DataFrame(tmp, index = index, columns = columns)
+    Parameter:
+    ---------
+    estimate : np.ndarray
+        estimated proportion values
+    truth : np.ndarray
 
-        return tmp
+    """
 
-    columns = pd.Index([ "Type " + str(x) for x in range(n_types) ])
-    index = pd.Index(["Spot " + str(x) for x in range(n_data) ])
+    # copy values
+    e = estimate.copy()
+    t = truth.copy()
 
-    res = {'Method ' + str(x): make_single(n_types,n_data,columns,index) for \
-           x in range(n_sets) }
+    # set complete zero rows to nan
+    e[np.sum(e,axis=1) == 0] = np.nan
+    t[np.sum(t,axis=1) == 0] = np.nan
 
-    true = make_single(n_types,n_data,columns,index)
+    # normalize data
+    e[np.sum(e,axis=1) == 0] = np.nan
+    t[np.sum(t,axis=1) == 0] = np.nan
 
-    return res, true
+    # adjust nans
+    e[np.isnan(e)] = 0
+    t[np.isnan(t)] = 0
 
-def make_values_data(n_data,
-                    n_sets,
-                   ):
+    # compute RMSE
+    rmse = np.sqrt(((e-t)**2).mean(axis = 1))
 
-    # to test visualization
-    # and t-test
-
-    vals = np.random.random((n_data,n_sets))
-    vals = vals + np.random.uniform(0,1,size = n_sets).reshape(1,-1)
-    index = pd.Index(["Spot " + str(x) for x in range(n_data) ])
-    cols = pd.Index(['Method ' + str(x) for x in range(n_sets) ])
-    vals = pd.DataFrame(vals, index = index, columns = cols)
-
-    return vals
-
-def _get_method_name(pth : str):
-    return pth.split('.')[0]
-
-def _kld_loss(estimate : np.ndarray,
-              truth : np.ndarray,
-              ):
-    # Use estimate as Q
-    # Use truth as P
-
-    q = estimate.copy()
-    p = truth.copy()
-
-    assert np.isnan(q).sum() == 0, \
-            "estimates contain zeros"
-
-    p[p == 0] = np.nan
-
-    terms = p*(np.log(q) - np.log(p))
-    terms[np.isnan(terms) ] = 0.0
-    kld = (-1.0) * terms.sum(axis = 1)
-
-    return kld
+    return rmse
 
 def read_files(res_pths : List[str],
                true_pth : str,
-               get_method_name = _get_method_name,
-              ):
+               method_names :str,
+              )-> Tuple[Dict[str,pd.DataFrame],pd.DataFrame]:
+
+    """read multiple proportion files
+
+    Parameter:
+    ---------
+    res_pths : List[str]
+        list of paths to results files
+    true_pth : str
+        path to ground truth file
+    method_names : str
+        name of methods being compared
+        should be in same order as
+        res_pths
+
+    Returns:
+    -------
+    Tuple where first element is
+    a dictionary containing
+    esimated proportion results
+    and second element is
+    pandas DataFrame containing
+    ground truth values
+
+    """
     res_list = []
     indices = []
     columns = []
-    method_names = []
 
+    # read all files
     for pth in res_pths:
         tmp_res = pd.read_csv(pth,
                               sep = '\t',
@@ -102,128 +109,416 @@ def read_files(res_pths : List[str],
                               index_col = 0,
                              )
 
+        # keep results
         res_list.append(tmp_res)
-        indices.append(tmp_res.index.values)
-        columns.append(tmp_res.columns.values)
-        method_names.append(get_method_name(pth))
+        # build list with sets of all indices
+        indices.append(set(tmp_res.index.values.tolist()))
+        # build list with sets of all columns
+        columns.append(set(tmp_res.columns.values.tolist()))
 
+    # only keep spots which are found
+    # in all results files
     indices = set.intersection(*indices)
-    indices = pd.Index(list(indices))
-
+    indices = list(indices)
+    # sort indices
+    indices.sort()
+    indices = pd.Index(indices)
+    # only keep types present in all
+    # results files
     columns = set.intersection(*columns)
-    columns = pd.Index(list(columns))
+    columns = list(columns)
+    columns.sort()
+    columns = pd.Index(columns)
 
-
+    # read ground truth files
     true_prop = pd.read_csv(true_pth,
                             sep = '\t',
                             header = 0,
                             index_col = 0,
                            )
 
+    # only keep spots where cells are present
+    is_not_zero = true_prop.index[(true_prop.values.sum(axis = 1) >  0)]
+    indices = indices.intersection(is_not_zero)
     true_prop = true_prop.loc[indices,columns]
-
+    # keep selected spots and types from results
     res_list = {method_names[x]:res_list[x].loc[indices,columns] for \
                 x in range(len(res_pths)) }
 
-    return res_list, true_prop
+    return (res_list, true_prop)
 
-def generate_results_df(res_list : Dict,
-                        true_prop : pd.DataFrame,
-                        loss_function = _kld_loss,
-                       ):
+def evaluate_results(res_list : Dict[str,pd.DataFrame],
+                     true_prop : pd.DataFrame,
+                     loss_function : Callable = _rmse,
+                     )->pd.DataFrame:
+    """Generate DataFrame of method performance
 
+    Parameter:
+    ---------
+    res_list : Dict
+        Dictionary of results generated by
+        read_files
+    true_prop : pd.DataFrame
+        Data Frame with ground truth values
+    loss_function :
+
+    """
+
+    # get number of spots present and
+    # number of methods to compare
     n_spots = list(res_list.values())[0].shape[0]
     n_methods = len(res_list)
 
+    # prepare DataFrame
+
+    # use method names as columns
     columns = res_list.keys()
+    # use spot names as indices
     index = list(res_list.values())[0].index
 
-    out_res = pd.DataFrame(np.zeros((n_spots,n_methods)),
+    out_res = pd.DataFrame(np.zeros((n_spots,
+                                     n_methods)),
                            index = index,
                            columns = columns,
                           )
 
     for k,res in enumerate(res_list.values()):
+        # compute loss for each result
         loss = loss_function(res.values,
                              true_prop.values,
                              )
-
-        out_res.iloc[:,k] = loss
+        # set loss values to column representing
+        # method
+        out_res.loc[:,out_res.columns[k]] = loss
 
     return out_res
 
 
+def generate_boxplot(res_data : pd.DataFrame,
+                     hline : Dict[str,np.ndarray] = None,
+                     use_raster : bool = False,
+                     )-> Tuple[plt.Figure,
+                               plt.Axes]:
 
+    """Visualize comparison with boxplots
 
-def visualize_results(res_data : pd.DataFrame,
-                      use_raster : bool = False,
-                     ):
+    Parameter:
+    ---------
+    res_data : pd.DataFrame
+        data frame of evaluated
 
-    use_raster = True
+    Returns:
+    -------
 
+    Tuple containing Matplotlib Figure and
+    Axes object
+
+    """
+
+    # get number of methods studied
     n_methods = res_data.shape[1]
+    # generate figure and axes object
+    fig, ax = plt.subplots(1,1,
+                           figsize = (n_methods * 4,6))
 
-    fig, ax = plt.subplots(1,1, figsize = (n_methods * 3,5))
+    # if data for null distribution is
+    # provided
+    if hline is not None:
+        ax.axhspan(hline['cil'],
+                   hline['ciu'],
+                   alpha = 0.2)
 
+
+        ax.axhline(y = hline['mu'],
+                   linestyle = 'dashed',
+                   color = 'black',
+                  )
+
+    # generate boxplot
     bp = ax.boxplot(res_data.T,
                     patch_artist = True,
+                    whis = 'range',
                     zorder = 0,
-                    meanline = True,
                    )
 
 
     plt.setp(bp['boxes'],
-              facecolor = "#444444",
+              facecolor = "white",
               edgecolor = 'black',
-              linewidth = 2,
+              linewidth = 1,
               )
 
     plt.setp(bp['medians'],
-              color = 'black',
-              linewidth = 2,
+              color = 'darkred',
+              linewidth = 1,
                 )
 
+    # remove top and right spines
     for pos in ['top','right']:
         ax.spines[pos].set_visible(False)
 
 
-    raster_x = np.arange(1,res_data.shape[1] + 1)
-    raster_x = np.random.normal(raster_x,
-                                0.05,
-                                size = (res_data.shape[0],raster_x.shape[0]))
+    # if raster should be plotted
     if use_raster:
+        raster_x = np.arange(1,res_data.shape[1] + 1)
+        raster_x = np.random.normal(raster_x,
+                                0.05,
+                                size = (res_data.shape[0],
+                                        raster_x.shape[0]))
+
         ax.scatter(raster_x,
                    res_data.values,
-                   alpha = 0.1,
+                   alpha = 0.05,
                    s = 10,
-                   #edgecolor = 'black',
-                   color = 'black',
+                   color = "#444444",
                   )
 
-    ax.set_xticklabels(res_data.columns,rotation = 45)
-    ax.set_ylabel("Loss")
+    # customize graph
+    ax.set_xticklabels(res_data.columns,
+                       rotation = 45)
+
+    ax.set_ylabel("RMSE")
     ax.set_xlabel("Methods")
 
     fig.tight_layout()
 
+    return (fig, ax)
+
+
+def generate_hist(data : pd.DataFrame,
+                 )->Tuple[plt.Figure,plt.Axes]:
+    """Histogram of performance metrics
+
+    Generates histogram over the obtained
+    performance metrics (eg. RMSE) for
+    each method
+
+    Parameter:
+    --------
+    data : pd.DataFrame
+        data frame containing values
+        from which histogram should
+        be generated
+
+    Returns:
+    -------
+    Tuple containing Matplotlib Figure and axes
+    objects
+
+    """
+
+    fig,ax = plt.subplots(1, data.shape[1])
+
+
+    if not isinstance(ax,np.ndarray):
+        ax = [ax]
+
+    for k,col in enumerate(data.columns):
+        ax[k].hist(data[col].values,
+                facecolor = 'gray',
+                edgecolor = 'black'
+               )
+
     return fig, ax
 
+def test_diff(data : pd.DataFrame,
+              ref_col : str,
+              ) -> pd.DataFrame :
+    """Conduct Wilcoxon signed-rank test
+
+    Performs a one sided Wilcoxon signed-rank
+    test; with alternative hypothesis that
+    the median of the performace metric
+    of competing method is less than
+    that of the reference method
+
+    Parameter:
+    ---------
+    data : pd.DataFrame
+        pandas DataFrame generated by evaluate_methods
+        function
+    ref_col : str
+        column name of method to be used
+        as reference
+
+    Returns:
+    -------
+
+    pandas DataFrame with average difference
+    between methods and obtained p-values
+
+    """
+
+    # get all colnames except reference column
+    non_ref = list(filter(lambda x: x != ref_col, data.columns))
+    # prepare DataFrame
+    rdf = np.zeros((len(non_ref),2))
+    rdf = pd.DataFrame(rdf,
+                       columns = ['Mean Difference','p-value'],
+                       index = non_ref,
+                      )
+
+    # Test reference method to others
+    for k,col in enumerate(non_ref):
+
+        # compute difference between reference and
+        # selected method
+        diff = data.loc[:,ref_col].values - data.loc[:,col].values
+        # get mean difference
+        mn = (diff).mean()
+        # compute w-statistic and p-value
+        stat,pval = st.wilcoxon(x = diff,
+                                alternative = 'less',
+                               )
+
+        rdf.loc[col,'Mean Difference'] = mn
+        rdf.loc[col,'p-value'] = pval
+
+    print(rdf)
+
+    return rdf
+
+def random_prop(true_prop : np.ndarray,
+                niter : int = 1000,
+                loss_function : Callable = _rmse,
+               ) -> Dict[str,float]:
+    """Random Proportion performance
+
+    Samples proportion values from a
+    Z-dimensional (Z is number of types)
+    Dirichlet distribution with
+    concentration parameters set to 1.0.
+
+    Then computes the mean values
+    of the performace
+    metric compared to the
+    ground truth niter
+    times.
+
+    Confidence interavls are taken
+    as
+
+    mean +/- 1.960*std/sqrt(niter)
+
+    Parameter:
+    ---------
+    true_prop : np.ndarray
+        true_proportion values
+    niter : int
+        number of iterantions by which
+        mean performance should be computed
+
+    loss_function : Callable
+        function to compute performance metric
+        from. Default is RMSE loss
+
+    Returns:
+    -------
+    Dictionary with mean of performance metric,
+    lower boundary and upper boundary for
+    confidence interval
+
+    """
+
+    loss_list = []
+    for iter in range(niter):
+        # sample Z-dimesnional vector
+        # from probability simplex
+        # for every spot
+        fake_prop = np.random.dirichlet(np.ones(true_prop.shape[1]),
+                                        size = true_prop.shape[0])
+        # compute performance metric
+        loss = loss_function(fake_prop,
+                             true_prop)
+
+        # keep mean of performance metric
+        loss_list.append(loss.mean())
+
+    # compute mean and confidence
+    # interval boundaries
+    loss_list = np.array(loss_list)
+    mu = loss_list.mean()
+    std = loss_list.mean()
+    nsq = np.sqrt(niter)
+
+    res = {'mu':mu,
+           'cil': mu - 1.960*std/nsq,
+           'ciu' : mu + 1.960*std/nsq,
+          }
+
+    return res
+
+
+def main():
+
+    prs = arp.ArgumentParser()
+
+    prs.add_argument("-rf", "--result_files",
+                     required = True,
+                     nargs = '+',
+                     help = "result files",
+                    )
+
+    prs.add_argument("-tf", "--truth_file",
+                     required = True,
+                     help = "ground truth files",
+                    )
+
+    prs.add_argument("-o","--out_dir",
+                     required = True,
+                     help = "",
+                    )
+
+    prs.add_argument("-mn","--method_names",
+                     required = False,
+                     nargs = '+',
+                     default = None,
+                     help = "",
+                    )
+
+    args = prs.parse_args()
+
+    if not isinstance(args.result_files,list):
+        args.result_files = [args.result_files]
+
+
+    if args.method_names is None:
+        args.method_names = [_get_method_names(x) for \
+                             x in args.result_files]
+
+    res, truth = read_files(args.result_files,
+                            args.truth_file,
+                            args.method_names)
+
+    sum_res = evaluate_results(res,
+                               truth)
+
+    hline = random_prop(truth.values)
+
+
+    res_df = test_diff(sum_res, sum_res.columns[0])
+
+    bfig, bax = generate_boxplot(sum_res,hline = hline)
+
+    hfig,hax = generate_hist(sum_res)
+
+    opth_base = osp.join(args.out_dir,
+                         '-'.join(args.method_names))
+
+
+    bfig.savefig('-'.join([opth_base,'boxplot.png']))
+    hfig.savefig('-'.join([opth_base,'histogram.png']))
+
+    res_opth = '-'.join([opth_base,'results.txt'])
+
+    with open(res_opth,'w+') as fopen:
+        fopen.writelines(res_df.to_latex(column_format = 'c|c|c'),
+                        )
+
+
+
 if __name__ == '__main__':
-    res, true = make_fake_res(n_data = 200, n_types = 5, n_sets = 8)
-
-    sum_res = generate_results_df(res, true)
-
-    fig, ax = visualize_results(sum_res)
-
-    fig.savefig('/tmp/bp.png')
-
-
-
-
-
-
-
-
+    main()
 
 
 

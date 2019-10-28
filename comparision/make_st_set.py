@@ -3,6 +3,7 @@
 import os
 import os.path as osp
 import argparse as arp
+from typing import Dict
 
 import pandas as pd
 import numpy as np
@@ -28,10 +29,70 @@ def make_fake_dataset(n_types = 7,
 
     return cnt.numpy(), labels
 
-def assemble_spot(cnt : np.ndarray,
+def _assemble_spec_spot(cnt : np.ndarray,
+                       labels : np.ndarray,
+                       n_cells : np.ndarray,
+                       n_spec : np.ndarray,
+                       alpha : float = 1.0,
+                       fraction : float = 0.05,
+                      ):
+
+
+    uni_labs, uni_counts = np.unique(labels, return_counts = True)
+
+    assert np.all(uni_counts >=  30), \
+            "Insufficient number of cells"
+
+    n_labels = uni_labs.shape[0]
+
+    n_types = dists.uniform.Uniform(low = 2,
+                                    high =  n_labels).sample().round().type(t.int)
+
+    pick_types = t.randperm(n_labels)[0:n_types]
+    members = t.zeros(n_labels)
+
+    while members.sum() < 1:
+        member_props = dists.Dirichlet(concentration = alpha * t.ones(n_types - 1)).sample()
+        members[pick_types[0:-1]] =  ( ( n_cells - n_spec) * member_props).round()
+
+    members[pick_types[-1]] = n_spec
+
+    while members.sum() != n_cells:
+        if members.sum() < n_cells:
+            add1 = np.argmin(members[pick_types[0:-1]])
+            members[pick_types[add1]] += 1
+        else:
+            del1 = np.argmax(members[pick_types[0:-1]])
+            members[pick_types[del1]] -= 1
+
+    props = members / members.sum()
+    members = members.type(t.int)
+    print(members,members.sum())
+
+    spot_expr = t.zeros(cnt.shape[1]).type(t.float32)
+
+    for z in range(n_types):
+        idx = np.where(labels == uni_labs[pick_types[z]])[0]
+        np.random.shuffle(idx)
+        idx = idx[0:members[z]]
+
+        # Q: should fraction be applied afterwards?
+        spot_expr +=  t.tensor((cnt[idx,:]*fraction).sum(axis = 0).round().astype(np.float32))
+
+    members[pick_types[-1]] *= -1
+
+    return {'expr':spot_expr,
+            'proportions':props,
+            'members': members,
+           }
+
+
+
+
+def _assemble_spot(cnt : np.ndarray,
                   labels : np.ndarray,
                   alpha : float = 1.0,
-                  fraction : float = 0.1,
+                  fraction : float = 0.05,
                   ):
 
     n_cells = dists.uniform.Uniform(low = 10,
@@ -70,13 +131,19 @@ def assemble_spot(cnt : np.ndarray,
         spot_expr +=  t.tensor((cnt[idx,:]*fraction).sum(axis = 0).round().astype(np.float32))
 
 
-    return spot_expr, props
+    return {'expr':spot_expr,
+            'proportions':props,
+            'members': members,
+           }
+
+
 
 def assemble_data_set(cnt : pd.DataFrame,
                       labels : pd.DataFrame,
                       n_spots : int,
                       n_genes : int,
-                      **kwargs,
+                      assemble_fun = _assemble_spot,
+                      assemble_specs : Dict = {},
                      ):
 
     labels = labels.loc[:,'bio_celltype']
@@ -92,13 +159,16 @@ def assemble_data_set(cnt : pd.DataFrame,
 
     st_cnt = np.zeros((n_spots,cnt.shape[1]))
     st_prop = np.zeros((n_spots,n_labels))
+    st_memb = np.zeros((n_spots,n_labels))
 
     for spot in range(n_spots):
-        st_cnt[spot,:], st_prop[spot,:] = assemble_spot(cnt.values,
-                                                        labels.values,
-                                                        **kwargs)
+        spot_data = assemble_fun(cnt.values,
+                                 labels.values,
+                                 **assemble_specs)
 
-    index = pd.Index([ 'Spot ' + str(x + 1) for x in range(n_spots) ])
+        st_cnt[spot,:],st_prop[spot,:],st_memb[spot,:] =  spot_data.values()
+
+        index = pd.Index([ 'Spotx' + str(x + 1) for x in range(n_spots) ])
 
     st_cnt = pd.DataFrame(st_cnt,
                           index = index,
@@ -109,8 +179,13 @@ def assemble_data_set(cnt : pd.DataFrame,
                            index = index,
                            columns = uni_labels,
                           )
+    st_memb = pd.DataFrame(st_memb,
+                           index = index,
+                           columns = uni_labels,
+                           )
 
-    return {'counts':st_cnt,'proportions':st_prop}
+
+    return {'counts':st_cnt,'proportions':st_prop,'members':st_memb}
 
 
 def main():
@@ -143,6 +218,12 @@ def main():
                      default = 'st_synth',
                     )
 
+    prs.add_argument('-sp','--special',
+                     nargs = 2,
+                     type = int,
+                     required = False,
+                     default = None,
+                    )
 
     args = prs.parse_args()
 
@@ -174,11 +255,23 @@ def main():
     sc_lbl = sc_lbl.loc[inter,:]
     sc_cnt = sc_cnt.loc[inter,:]
 
+
+    if args.special is not None:
+        assemble_fun = _assemble_spec_spot
+        assemble_specs = dict(n_cells = args.special[0],
+                              n_spec = args.special[1],
+                              )
+    else:
+        assemble_fun = _assemble_spot
+        assemble_specs = {}
+
     assembled_set = assemble_data_set(sc_cnt,
                                       sc_lbl,
                                       n_spots = n_spots,
                                       n_genes = n_genes,
-                                     )
+                                      assemble_fun = assemble_fun,
+                                      assemble_specs = assemble_specs,
+                                      )
 
     for k,v in assembled_set.items() :
         out_pth = osp.join(out_dir, '.'.join([k,args.tag,'tsv']))

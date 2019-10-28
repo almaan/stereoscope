@@ -187,7 +187,7 @@ def run(prs : arp.ArgumentParser,
                                    )
 
         st_loss_tracker = utils.LossTracker(oname_loss_track,
-                                            interval = 1000,
+                                            interval = 100,
                                            )
 
         # estimate proportions of cell types within st data
