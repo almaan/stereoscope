@@ -7,3 +7,5 @@ STereoSCope.egg-info/
 comparison/{join_st_sets.py,sensitivity.py}
 build/
 dist/
+DWLS/
+deconvSeq/
