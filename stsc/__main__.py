@@ -3,6 +3,7 @@
 import stsc.parser as parser
 from stsc.run import run
 from stsc.look import look
+from stsc.progress import progress
 
 def main():
     prs = parser.make_parser()
@@ -12,6 +13,10 @@ def main():
         run(prs,args)
     elif args.command == 'look':
         look(args)
+    elif args.command == 'progress':
+        progress(args.loss_file,
+                 args.window_size,
+                )
     else:
         print(' '.join(["Use the command 'steroscope run' to analyze",
                         "your data. Use 'steroescope look' to visualize",

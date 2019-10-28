@@ -11,6 +11,7 @@ def make_parser():
     subparsers = parser.add_subparsers(dest = 'command')
     run_parser = subparsers.add_parser("run")
     look_parser = subparsers.add_parser("look")
+    progress_parser = subparsers.add_parser('progress')
 
 # Run Parser Arguments ---------------------------------------------
 
@@ -160,7 +161,7 @@ def make_parser():
 
     run_parser.add_argument("-mscc","--min_sc_counts",
                         required = False,
-                        default = 300,
+                        default = 0,
                         type = float,
                         help = ''.join([f"minimum number of ",
                                         f" counts for single cells",
@@ -320,5 +321,21 @@ def make_parser():
                                        ]),
                         )
 
+    progress_parser.add_argument("-lf",'--loss_file',
+                                 required = True,
+                                 help = ''.join(['path to loss',
+                                                 'data',
+                                                ]
+                                               ),
+                                )
+
+    progress_parser.add_argument("-ws",'--window_size',
+                                 required = False,
+                                 default = 11,
+                                 help = ''.join(['window size for',
+                                                 'rolling average',
+                                                ]
+                                               ),
+                                )
 
     return parser

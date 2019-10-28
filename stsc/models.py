@@ -23,6 +23,7 @@ class ScModel(nn.Module):
                  n_celltypes : int,
                  device : t.device,
                  )->None:
+
         super().__init__()
 
         # Get dimensions from data
@@ -146,7 +147,7 @@ class STModel(nn.Module):
 
     def noise_loss(self,
                   )-> t.Tensor:
-        """Regularizing term when noise is included"""
+        """Regularizing term for noise"""
         return -0.5*t.sum(t.pow(self.eta,2))
 
     def _llnb(self,

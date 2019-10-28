@@ -31,15 +31,18 @@ class CountDataHelper(object):
 
 
 class CountData(Dataset):
-    """
+    """CountData Dataset class
+
     Class to hold count data from ST or
     Single Cell experiments
 
     Arguments:
     ---------
 
-    cnt : pd.DataFrame - Count data [n_observations x n_genes]
-    lbl : pd.DataFrame - Annotation/Label data [n_observations]
+    cnt : pd.DataFrame
+        Count data [n_observations x n_genes]
+    lbl : pd.DataFrame
+        Annotation/Label data [n_observations]
 
     """
 
@@ -89,10 +92,11 @@ class CountData(Dataset):
 
         Parameter:
         ---------
-        pattern : str - string containing regex pattern
-                        for which matching genes should
-                        be removed. Default is RP-genes
-                        and MALAT1
+        pattern : str
+            string containing regex pattern
+            for which matching genes should
+            be removed. Default is RP-genes
+            and MALAT1
 
         """
         if pattern is None:
@@ -114,13 +118,15 @@ class CountData(Dataset):
 
         Parameter:
         ----------
-        min_counts : int - minimal number of observed
-                           counts assigned to a specific
-                           spot/cell for it to be included
+        min_counts : int
+            minimal number of observed
+            counts assigned to a specific
+            spot/cell for it to be included
 
-        min_occurance : int - minimal number of occurances
-                              of a gene among all spots/cells
-                              for it to be included
+        min_occurance : int
+            minimal number of occurances
+            of a gene among all spots/cells
+            for it to be included
 
         """
 
@@ -128,7 +134,7 @@ class CountData(Dataset):
         ridx = np.where(self.cnt.sum(dim = 1) > row_thrs)[0]
         cidx = np.where((self.cnt != 0).type(t.float32).sum(dim = 0) > col_thrs)[0]
 
-        self.counts = self.cnt[ridx,:][:,cidx]
+        self.cnt = self.cnt[ridx,:][:,cidx]
         self.lbl = self.lbl[ridx]
         self.zidx = self.zidx[ridx]
 
@@ -140,8 +146,9 @@ class CountData(Dataset):
 
         Parameter:
         ----------
-        exog_genes : pd.Index - set genes which object's genes
-                                set should be intersected with
+        exog_genes : pd.Index
+            set of genes which object's gene
+            set should be intersected with
         Returns:
         -------
 
@@ -180,8 +187,9 @@ class CountData(Dataset):
 
         Parameter:
         ---------
-        idx : List[int] - list of indices for samples to
-                          be returned
+        idx : List[int]
+            list of indices for samples to
+            be returned
 
         Returns:
         -------
@@ -220,24 +228,31 @@ def make_sc_dataset(cnt_pth : str,
     Parameter:
     ---------
 
-    cnt_pth : str  - path to SC count data
+    cnt_pth : str
+        path to SC count data
 
-    lbl_pth : str  - path to SC label data
+    lbl_pth : str
+        path to SC label data
 
-    topn_genes : bool -  number of top expressed genes to
-                         include
+    topn_genes : bool
+        number of top expressed genes to
+        include
 
-    gene_list_pth : str - gene list
+    gene_list_pth : str
+        gene list
 
-    lbl_colname : str - name of column containing labels
+    lbl_colname : str
+        name of column containing labels
 
-    min_counts : int - minimal number of observed
-                       counts assigned to a specific
-                       spot/cell for it to be included
+    min_counts : int
+        minimal number of observed
+        counts assigned to a specific
+        spot/cell for it to be included
 
-    min_cells : int - minimal number of occurances
-                      of a gene among all cells
-                      for it to be included
+    min_cells : int
+        minimal number of occurances
+        of a gene among all cells
+        for it to be included
 
     Returns:
     -------
@@ -308,21 +323,26 @@ def make_st_dataset(cnt_pths : List[str],
     Parameter:
     ---------
 
-    cnt_pths : List[str] -  list of paths to ST-data
+    cnt_pths : List[str]
+        list of paths to ST-data
 
-    topn_genes : bool - number of top expressed genes to
-                 include in analysis
+    topn_genes : bool
+        number of top expressed genes to
+        include in analysis
 
-    min_counts : int - minimal number of observed
-                       counts assigned to a specific
-                       spot/cell for it to be included
+    min_counts : int
+        minimal number of observed
+        counts assigned to a specific
+        spot/cell for it to be included
 
-    min_occurance : int - minimal number of occurances
-                          of a gene among all spots/cells
-                          for it to be included in analysis
+    min_occurance : int
+        minimal number of occurances
+        of a gene among all spots/cells
+        for it to be included in analysis
 
-    filter_genes : exclude MALAT1 and RP genes from
-                   analysis
+    filter_genes : bool
+        exclude MALAT1 and RP genes from
+        analysis
 
 
     Returns:

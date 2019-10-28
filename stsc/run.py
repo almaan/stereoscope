@@ -81,8 +81,8 @@ def run(prs : arp.ArgumentParser,
                 )
 
         # control that paths to sc data exists
-        if not any([osp.exists(args.sc_cnt_pth),
-                    osp.exists(args.sc_lbl_pth)]):
+        if not all([osp.exists(args.sc_cnt),
+                    osp.exists(args.sc_labels)]):
 
             log.error(' '.join(["One or more of the specified paths to",
                                 "the sc data does not exist"]))
@@ -93,11 +93,11 @@ def run(prs : arp.ArgumentParser,
             log.info("loading state from provided sc_model")
 
         # Create data set for single cell data
-        sc_data = D.make_sc_dataset(args.sc_cnt_pth,
-                                    args.sc_lbl_pth,
+        sc_data = D.make_sc_dataset(args.sc_cnt,
+                                    args.sc_labels,
                                     topn_genes = args.topn_genes,
                                     gene_list_pth = args.gene_list,
-                                    lbl_colname = args.lbl_colname,
+                                    lbl_colname = args.label_colname,
                                     filter_genes = args.filter_genes,
                                     min_counts = args.min_sc_counts,
                                     min_cells = args.min_cells,
@@ -105,18 +105,29 @@ def run(prs : arp.ArgumentParser,
 
         log.info(' '.join(["SC data GENES : {} ".format(sc_data.G),
                            "SC data CELLS : {} ".format(sc_data.M),
-                           "SC data TYPES : {} ".format(sc_data.K),
+                           "SC data TYPES : {} ".format(sc_data.Z),
                            ])
                 )
 
+        # generate LossTracker object
+        oname_loss_track = osp.join(args.out_dir,
+                                    '.'.join(["sc_loss",timestamp,"txt"])
+                                   )
+
+        sc_loss_tracker = utils.LossTracker(oname_loss_track,
+                                            interval = 100,
+                                            )
         # estimate parameters from single cell data
-        R, logits, sc_model = fit.fit_sc_data(sc_data,
-                                              sc_epochs = args.sc_epochs,
-                                              sc_batch_size = args.sc_batch_size,
-                                              learning_rate = args.learning_rate,
-                                              sc_from_model = args.sc_model,
-                                              device = device,
-                                             )
+        sc_res  = fit.fit_sc_data(sc_data,
+                                  loss_tracker = sc_loss_tracker,
+                                  sc_epochs = args.sc_epochs,
+                                  sc_batch_size = args.sc_batch_size,
+                                  learning_rate = args.learning_rate,
+                                  sc_from_model = args.sc_model,
+                                  device = device,
+                                 )
+
+        R,logits,sc_model = sc_res['rates'],sc_res['logits'],sc_res['model']
         # save sc model
         oname_sc_model = osp.join(args.out_dir,
                                   '.'.join(['sc_model',timestamp,'pt']))
@@ -150,7 +161,7 @@ def run(prs : arp.ArgumentParser,
         log.info("fit st data section(s) : {}".format(args.st_cnt))
 
         # check that provided files exist
-        if not all([osp.exists(x) for x in st_cnt_pths]):
+        if not all([osp.exists(x) for x in args.st_cnt]):
             log.error("Some of the provided ST-data paths does not exist")
             sys.exit(-1)
 
@@ -158,7 +169,7 @@ def run(prs : arp.ArgumentParser,
             log.info("loading state from provided st_model")
 
         # create data set for st data
-        st_data =  D.make_st_dataset(st_cnt_pths,
+        st_data =  D.make_st_dataset(args.st_cnt,
                                      topn_genes = args.topn_genes,
                                      min_counts = args.min_st_counts,
                                      min_spots = args.min_spots,
@@ -170,17 +181,32 @@ def run(prs : arp.ArgumentParser,
                            ])
                 )
 
-        # estimate proportions of cell types within st data
-        wlist,st_model = fit.fit_st_data(st_data,
-                                         R = R,
-                                         logits = logits,
-                                         st_epochs = args.st_epochs,
-                                         learning_rate = args.learning_rate,
-                                         silent_mode = args.silent_mode,
-                                         st_from_model = args.st_model,
-                                         device = device,
-                                        )
+        # generate LossTracker object
+        oname_loss_track = osp.join(args.out_dir,
+                                    '.'.join(["st_loss",timestamp,"txt"])
+                                   )
 
+        st_loss_tracker = utils.LossTracker(oname_loss_track,
+                                            interval = 1000,
+                                           )
+
+        # estimate proportions of cell types within st data
+        st_res = fit.fit_st_data(st_data,
+                                 R = R,
+                                 logits = logits,
+                                 loss_tracker = st_loss_tracker,
+                                 st_epochs = args.st_epochs,
+                                 st_batch_size = args.st_batch_size,
+                                 learning_rate = args.learning_rate,
+                                 silent_mode = args.silent_mode,
+                                 st_from_model = args.st_model,
+                                 device = device,
+                                 )
+
+        W,st_model = st_res['proportions'],st_res['model']
+
+        # split joint matrix into multiple
+        wlist = utils.split_joint_matrix(W)
 
         # save st model
         oname_st_model = osp.join(args.out_dir,
