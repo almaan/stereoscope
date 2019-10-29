@@ -1,5 +1,26 @@
 #!/usr/bin/Rscript
 
+# check if necessary packages are installed
+pkg.list <- installed.packages()[,"Package"] 
+
+if (!("argparse") %in% pkg.list) {
+    install.packages("argparse")
+}
+
+if (!("deconvSeq" %in% pkg.list)) {
+    if (!("devtools") %in% pkg.list) {
+        install.packages("devtools")
+    }
+    devtools::install_github("rosedu1/deconvSeq")
+}
+
+if (!("SingleCellExperiment") %in% pkg.list) {
+    if (!requireNamespace("BiocManager", quietly = TRUE))
+            install.packages("BiocManager")
+
+    BiocManager::install("SingleCellExperiment")
+}
+
 library(deconvSeq)
 library(SingleCellExperiment)
 library(argparse)
@@ -65,52 +86,43 @@ cnts.st <- read.table(st_cnt_pth,
 
 cnts.st <- t(cnts.st)
 
-keep.cells <- colSums(cnts.sc) > 300
 keep.genes <- rowMeans(cnts.sc) > 0.05
+cnts.sc <- cnts.sc[keep.genes,]
+keep.cells <- colSums(cnts.sc) > 300
+cnts.sc <- cnts.sc[,keep.cells]
 
-cnts.sc <- cnts.sc[keep.genes,keep.cells]
+
 lbl_vec <- lbl_vec[keep.cells]
 
 ori_lnames <- levels(as.factor(lbl_vec))
 lbl_vec <- gsub(",","",lbl_vec)
-lbl_vec <- as.factor(lbl_vec)
-design.sc = model.matrix(~-1+lbl_vec)
-
-colnames(design.sc) <- levels(lbl_vec)
-rownames(design.sc) <- colnames(cnts.sc)
-
 inter <- intersect(rownames(cnts.st),rownames(cnts.sc))
 cnts.st <- as.matrix(cnts.st[inter,])
 cnts.sc <- as.matrix(cnts.sc[inter,])
+names(lbl_vec) <- colnames(cnts.sc)
 
-print(dim(cnts.st))
-print(dim(cnts.sc))
+cnts.sc <- prep_scrnaseq(cnts.sc,
+                         genenametype = "hgnc_symbol",
+                         cellcycle = NULL,
+                         count.threshold = 0.05)
 
-
-print("Prepping sc data")
-#cnts.sc <- prep_scrnaseq(cnts.sc,
-#                         genenametype = "hgnc_symbol",
-#                         cellcycle =NULL,
-#                         count.threshold = 0.05)
-#cnts.sc <-getcellcycle(cnts.sc,"G1")
-#
-#
-#cnts.st <- prep_scrnaseq(cnts.st,
-#                         genenametype = "hgnc_symbol",
-#                         cellcycle =NULL,
-#                         count.threshold = 0.05)
-#
-#cnts.st <-getcellcycle(cnts.st,"G1")
+lbl_vec <-lbl_vec[colnames(cnts.sc)]
+lbl_vec <- as.factor(lbl_vec)
+design.sc = model.matrix(~-1+lbl_vec)
+colnames(design.sc) <- levels(lbl_vec)
+rownames(design.sc) <- colnames(cnts.sc)
 
 
-cnts.sc <- SingleCellExperiment(assays = list(counts=cnts.sc))  #counts must be matrix
-cnts.sc <- assay(cnts.sc, i ="counts")
-#
-cnts.st <- SingleCellExperiment(assays = list(counts=cnts.st))  #counts must be matrix
-cnts.st <- assay(cnts.st, i ="counts")
+cnts.st <- prep_scrnaseq(cnts.st,
+                         genenametype = "hgnc_symbol",
+                         cellcycle =NULL,
+                         count.threshold = 0.05)
+set.seed(1337)
+print("filter st data")
+cnts.st <-cnts.st[intersect(rownames(cnts.st),rownames(cnts.sc)),]
+cnts.st <- cnts.st[,colSums(cnts.st) > 0]
 
-print("hej")
-
+print("Get DGE from sc data")
 dge.sc = getdge(cnts.sc,
                 design.sc,
                 ncpm.min=1,
@@ -118,19 +130,19 @@ dge.sc = getdge(cnts.sc,
                 method="bin.loess")
 
 print("fit b0")
-
 b0.sc = getb0.rnaseq(dge.sc,
                      design.sc,
                      ncpm.min=1,
                      nsamp.min=4)
 
-print("fir st")
+print("Get DGE from ST")
 dge.st = getdge(cnts.st,
                 NULL,
                 ncpm.min=1,
                 nsamp.min=4,
                 method="bin.loess")
 
+print("get res")
 res = getx1.rnaseq(NB0=200,
                    b0.sc,
                    dge.st)
