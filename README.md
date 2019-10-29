@@ -265,10 +265,8 @@ will scale all values within each section.
 
 Below you see some examples of the generated images:
 
-<p align="center">
 ![alt text](imgs/propviz.png "single proportion visualization")
 ![alt text](imgs/compressed.png "joint visualization")
-<p> 
 
 You can customize the output of ```stereoscope look```in multiple ways by providing certain arguments, for more
 information run 
