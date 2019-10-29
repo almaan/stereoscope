@@ -203,7 +203,8 @@ the command rather than after).
 
 ### 4. Inspect Results
 
-####4.1 Format of results
+**4.1 Orienting the of results**
+
 When the complete analysis is done your res folder should contain the following content
 ```console
 foo@bar:~$ ls -1
@@ -244,7 +245,8 @@ Whilst it would be legitimate to put a threshold on some of these values; for ex
 a certain value to zero and renormalize. We choose to keep all values in the analysis - choose whatever strategy you
 feel is most appealing.
 
-####4.2 Visualizing results
+**4.2 Visualizing results**
+
 We include a tool for quick visualization of the results in the stereoscope package - to run this simply do:
 
 ```console
@@ -263,10 +265,10 @@ will scale all values within each section.
 
 Below you see some examples of the generated images:
 
-<div align="center">
+<p align="center">
 ![alt text](imgs/propviz.png "single proportion visualization")
 ![alt text](imgs/compressed.png "joint visualization")
-</div> 
+<p> 
 
 You can customize the output of ```stereoscope look```in multiple ways by providing certain arguments, for more
 information run 
