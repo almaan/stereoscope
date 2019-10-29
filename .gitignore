@@ -6,6 +6,6 @@ visual/map2he/imgs/
 STereoSCope.egg-info/
 build/
 dist/
-DWLS/
-deconvSeq/
-comparison/old/
+/DWLS/
+/deconvSeq/
+comparison/old
