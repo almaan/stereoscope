@@ -20,6 +20,7 @@ setup(name='STereoSCope',
                             'matplotlib',
                             'sklearn',
                             'umap-learn',
+                            'Pillow',
                       ],
             entry_points={'console_scripts': ['stereoscope = stsc.__main__:main',
                                              ]
