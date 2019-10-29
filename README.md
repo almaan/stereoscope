@@ -164,6 +164,7 @@ the following specifics in our analysis
 | sc batch size | 100 |
 | st epochs | 75000
 | st batch size | 100|
+| learning rate | 0.01|
 | gpu | True |
 
 To run the analysis enter the following into your terminal
@@ -275,9 +276,9 @@ foo@bar:~$ stereoscope look -h
 
 ```
 
-For a more sopisticated visualization you could also overlay the spots on the tissue, to better see how the spatial patterns
-matches with the morphology, like we did in our figures. This is not a part of the stereoscope package, but we do
-provide scripts for this.
+For a more informative visualization you could also overlay the spots on the tissue, to better see how the spatial patterns
+relates to the morphology, like we did in our figures. This type of visualization is not a part of the stereoscope package,
+but we do provide scripts for this.
 
 The material that you need for such visualization is:
 * HE-image - image taken of the tissue, can be scaled but not cropped
@@ -302,5 +303,139 @@ Resulting in images like these:
 
 ![alt text](imgs/overlay-example.png "HE-overlay")
 
+## Reproducing the Method Comparion
+In the paper we compare stereoscope with two other methods [DWLS](https://github.com/dtsoucas/DWLS) and
+[deconvSeq](https://github.com/rosedu1/deconvSeq) using synthetic data, something we will reproduce in this section.
 
+### 1. Generating Synthetic Data
+Begin by unzipping the file data/comp/comp-data.zip into the data/comp/ folder
+
+```
+foo@bar:~$ cd data/comp
+foo@bar:~$ unzip comp-data.zip 
+foo@bar:~$ ls -1
+
+comp-data.zip
+
+real:
+ori-sc-cnt.tsv
+ori-sc-mta.tsv
+
+synthetic:
+generation.20190908194059502947.cnt_data.tsv
+generation.20190908194059502947.mta_data.tsv
+generation.20190908194059502947.stats.tsv
+proportions.hippo.tsv
+st-counts.hippo.tsv
+validation.20190908194059502947.cnt_data.tsv
+validation.20190908194059502947.mta_data.tsv
+validation.20190908194059502947.stats.tsv
+
+```
+As you can see, there is already a set of synthetic data prepared, you can use this data if you'd like to - then move
+ahead to step 2. However we will go through the full procedure here. Begin by removing the prepared data to not mix
+things up
+
+```konsole
+foo@bar:~$ rm synthetic/*
+```
+
+The first step is to split our single cell data into a ''generation'' and ''validation'' set, preferably of equal size.
+The single cell data set we use stems from the same hippocampus set we used in the previous example, but where we
+subsampled w.r.t. to Subclass labels rather than cluster labels.
+
+```console
+foo@bar:~$ ../../comparison/synthetic_data_generation/make_sc_sets.py real/hippo-real-sc-cnt.tsv real/hippo-real-sc-mta.tsv synthetic
+
+```
+We now have a validation and generation data set
+```console
+foo@bar:~$ ls -1 synthetic/
+generation.20190908194059502947.cnt_data.tsv
+generation.20190908194059502947.mta_data.tsv
+validation.20190908194059502947.cnt_data.tsv
+validation.20190908194059502947.mta_data.tsv
+```
+Thus we can use the ''generation'' set to generate synthetic ST data, we will generate a set with 1000 spots and 500
+genes and tag the generated files with "st-hippo-comp". The validation set is set aside to be used as single cell data
+provided to each respective method upon deconvolution.
+
+```console
+foo@bar:~$ ../../comparison/synthetic_data_generation/make_st_set.py -c synthetic/generation.20190908194059502947.cnt_data.tsv -l synthetic/generation.20190908194059502947.mta_data.tsv -ns 1000 -ng 500 -o synthetic -t st-hippo-comp
+
+```
+We now have synthetic ST expression data, where we know both the proportion and number of cells from each cell type
+within every spot.
+
+```console
+foo@bar:~$ ls -1 synthetic/
+counts.st-hippo-comp.tsv
+generation.20190908194059502947.cnt_data.tsv
+generation.20190908194059502947.mta_data.tsv
+members.st-hippo-comp.tsv
+proportions.st-hippo-comp.tsv
+validation.20190908194059502947.cnt_data.tsv
+validation.20190908194059502947.mta_data.tsv
+
+```
+
+
+
+### 2. Running stereoscope
+We will run stereoscope with the following arguments (see previous section for more details regarding the stereoscope
+interface):
+
+```console
+foo@bar:~$ stereoscope run --sc_cnt synthetic/valid*cnt* --sc_labels synthetic/valid*mta* -scb 256 -sce 50000 --st_cnt synthetic/counts.st-hippo-comp.tsv -ste 50000 -o ../res/comp-stereoscope --gpu -lr 0.1
+```
+
+Where the results will be saved to ```comp-stereoscope``` in the ```res``` folder
+
+### 3. Running other methods
+
+Since none of the other two methods were designed with ST data in mind, we have written ''wrappers'' for them to use ST
+data as input and render similar output files. 
+
+**DWLS**
+
+Small modifications were made to the DWLS code, since some of the provided functions crashed upon usage, these changes
+were however minor and does not affect the method itself. We provide a ''modded'' version of their file
+''Deconvolution_functions.R'' the two modifications we made are marked with the tag ```#MODIFICATION``` within the code.
+Using Seurat for the DE-analysis was not successfull, thus we choose the second alternative, MAST.  Negative values are
+also given for some proportions, we take all of these to be equal to zero.
+
+To run DWLS goto the main directory of the repo and enter
+
+```console
+foo@bar:~$ comparison/alternative_methods/DWLS/DWLS-implementation.R -wd res/comp-DWLS \
+-sc data/comp/synthetic/validation*cnt_data.tsv -mt data/comp/synthetic/validation.*.mta_data.tsv \
+-st data/comp/synthetic/counts*.tsv 
+```
+
+**deconvSeq**
+
+We followed the instructions given in the [HTML-Vignette](https://rosedu1.github.io/deconvSeq/deconvSeq_vignette.html)
+for deconvSeq, in order to estimate the proportions - no cell cycle filtering is performed. To run deconvSeq got the main directory of the repo and enter
+
+```console
+foo@bar:~$ comparison/alternative_methods/deconvSeq/deonvSeq-implementation.R \
+ -sc data/comp/synthetic/validation.*.cnt_data.tsv \
+ -mt data/comp/synthetic/validation.*.mta_data.tsv \ 
+ -st data/comp/synthetic/counts.*.tsv -o res/comp-deconvSeq
+```
+We noticed that sometimes the bioMart-dependent functions did not successfully execute, if such an error arise wait a
+minute and try again.
+
+### 4. Comparing performance
+
+Having estimated the proportions using all three methods, we can now compare them. To do so we compute the RMSE between
+the actual proportion values within each spot and the estimated values. We visualize these values in a boxplot, and
+conduct a one-sided test (Wilcoxon Ranked Sum test) to see whether stereoscope performs better than the other methods.
+
+```console
+comparison/compare.py -rf  res/comp-stereoscope/*/W*tsv res/comp-DWLS/proportions.tsv res/deconvSeq-proportions.tsv \
+ -tf data/comp/synthetic/proportions.hippo.tsv -o res/comp -mn stereoscope DWLS devonvSeq
+
+```
+Which will generate a image like the follwing
 
