@@ -6,12 +6,10 @@ paper. In addition, scripts used to preprocess, visualize and compare data/resul
 Below you will find  examples of how to use stereoscope, whilst these are cast as a guide in how to reproduce the
 results the procedure can of course be generalized and applied to any data set. The examples included are
 
-<a href="##reprodmb">test</a>
-
-1. [Reproducing the mouse brain analysis](##reprodmb): Conducting the complete analysis of the mouse brain presented in the paper,
+1. [Reproducing the mouse brain analysis](#reprodmb): Conducting the complete analysis of the mouse brain presented in the paper,
    from downloading data to visualizing the results
-2. [Reproducing the method comparison](##reprodcomp): Generation of synthetic data, running all three methods and comparing them
-3. [Using pre-estimated parameters](##bc-add) : Examining four additional breast cancer samples, applying already
+2. [Reproducing the method comparison](#reprodcomp): Generation of synthetic data, running all three methods and comparing them
+3. [Using pre-estimated parameters](#bc-add) : Examining four additional breast cancer samples, applying already
    estimated single cell parameters to a ST data set.
 
 ## Installing stereoscope
@@ -461,7 +459,7 @@ foo@bar:~$ comparison/compare.py -rf  res/comp-stereoscope/*/W*tsv res/comp-DWLS
  -tf data/comp/synthetic/proportions.hippo.tsv -o res/comp -mn stereoscope DWLS devonvSeq
 
 ```
-Which will generate a image like the follwing :
+Which will generate an image like the follwing :
 
 ![alt text](imgs/stereoscope-deconvseq-DWLS-boxplot.png "Comparison of Methods")
 
@@ -477,8 +475,9 @@ allows you to this in a seamless manner.
 To exemplify - we looked at breast cancer using one ST section and a curated Lung Cancer single cell data set. But
 perhaps we have another set of ST breast cancer data which we would like to map the very same single cell data to.
 
-In the original ST [publication](https://science.sciencemag.org/content/353/6294/78.long) 12 MOB (Mouse Olfactory Bulb) and 4 Breast Cancer sections were presented, let us analyze
-the breast cancer samples using the Lung Cancer Data set.
+In the original ST [publication](https://science.sciencemag.org/content/353/6294/78.long) 12 MOB (Mouse Olfactory Bulb)
+and 4 Breast Cancer sections were presented - we will analyze the breast cancer samples using the Lung Cancer single
+cell data set.
 
 ![alt text](imgs/bc-he.jpg "HE-image of from breast cancer tissue in original publication")
 
@@ -514,8 +513,12 @@ Now you can find the estimated single cell parameters (rates and logits) for the
 ```data/params-lc``` folder. To use these in conjuction with the newly downloaded breast cancer ST data simply do : 
 
 ```console
-foo@bar:~$ stereoscope run --sc_fit ../params-lc/R*.tsv ../params/logits*.tsv --st_cnt st-bc*.tsv --ste 50000 -stb 256 -lr 0.01 --gpu -o ../../res/bc-add
-
+foo@bar:~$ stereoscope run --sc_fit ../params-lc/R*.tsv ../params/logits*.tsv --st_cnt st-bc*.tsv \
+--ste 50000 -stb 256 -lr 0.01 --gpu -o ../../res/bc-add
+[2019-10-30 05:44:00,255 - stsc - INFO ] >> Using device cuda
+[2019-10-30 05:44:00,256 - stsc - INFO ] >> load sc parameter | rates (R) : ../params-lc/R.lc.tsv | logodds (logits) : ../params-lc/logits.lc.tsv
+[2019-10-30 05:44:00,312 - stsc - INFO ] >> fit st data section(s) :['st-bc1.tsv', 'st-bc2.tsv', 'st-bc3.tsv','st-bc4.tsv']
+[2019-10-30 05:44:13,668 - stsc - INFO ] >> ST data GENES : 16385  ST data SPOTS : 1031  
 ```
 
 The flag  ```--sc_fit``` expects two positional arguments, the first being the path to the rates and the second being
@@ -525,8 +528,9 @@ the path to the logits.
 We can visualize the resullts by using the ```look``` module of stereoscope (see above for more detailed description).
 This is simply done by :
 
-```con
+```console
 foo@bar:~$ cd ../../res/bc-add
-foo@bar:~$ stereoscope look -pp bc*/W*tsv -ms 80 -nc 2 -sc i -sb s -c "umap" -g -o viz
+foo@bar:~$ stereoscope look -pp bc*/W*tsv -ms 80 -nc 5 -sc i -sb s -c "umap" -g -y -o viz
 ```
 Which will generate a set of images like these : 
+![alt text](imgs/bc-example.png "breast cancer example")
