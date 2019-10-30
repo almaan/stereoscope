@@ -6,9 +6,11 @@ paper. In addition, scripts used to preprocess, visualize and compare data/resul
 Below you will find  examples of how to use stereoscope, whilst these are cast as a guide in how to reproduce the
 results the procedure can of course be generalized and applied to any data set. The examples included are
 
-1. [Reproducing the mouse brain analysis](#reproducing-the-mouse-brain-analysis): Conducting the complete analysis of the mouse brain presented in the paper,
+1. [Reproducing the mouse brain analysis](#reprodmb): Conducting the complete analysis of the mouse brain presented in the paper,
    from downloading data to visualizing the results
-2. [Reproducing the method comparison](#reproducing-the-method-comparion): Generation of synthetic data, running all three methods and comparing them
+2. [Reproducing the method comparison](#reprodcomp): Generation of synthetic data, running all three methods and comparing them
+3. [Using pre-estimated parameters](#bc-add) : Examining four additional breast cancer samples, applying already
+   estimated single cell parameters to a ST data set.
 
 ## Installing stereoscope
 To make things easy for you, we have included installation files for stereoscope, a lot of scripts and some data sets in
@@ -55,6 +57,8 @@ the future - otherwise you will have to repeat every time you open a new termina
 Having installed stereoscope, we are ready to start with the analysis.
 
 ---
+
+<a id="reprodmb"></a>
 
 ## Reproducing The Mouse Brain Analysis
 Let us begin by reproducing the results presented for the mouse brain (hippocampal) region. Here we will go through the
@@ -313,6 +317,7 @@ Resulting in images like these (we rotated these images in our paper):
 
 ![alt text](imgs/overlay-example.png "HE-overlay")
 
+<a id="reprodcomp"></a>
 ## Reproducing the Method Comparion
 In the paper we compare stereoscope with two other methods [DWLS](https://github.com/dtsoucas/DWLS) and
 [deconvSeq](https://github.com/rosedu1/deconvSeq) using synthetic data. This comparison is something we will reproduce
@@ -446,12 +451,80 @@ minute and try again.
 
 Having estimated the proportions using all three methods, we can now compare them. To do so we compute the RMSE between
 the actual proportion values within each spot and the estimated values. We visualize these values in a boxplot, and
-conduct a one-sided test (Wilcoxon Ranked Sum test) to see whether stereoscope performs better than the other methods.
+conduct a one-sided test ([Wilcoxon signed-rank
+test](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wilcoxon.html)) to see whether stereoscope performs better than the other methods.
 
 ```console
-comparison/compare.py -rf  res/comp-stereoscope/*/W*tsv res/comp-DWLS/proportions.tsv res/deconvSeq-proportions.tsv \
+foo@bar:~$ comparison/compare.py -rf  res/comp-stereoscope/*/W*tsv res/comp-DWLS/proportions.tsv res/deconvSeq-proportions.tsv \
  -tf data/comp/synthetic/proportions.hippo.tsv -o res/comp -mn stereoscope DWLS devonvSeq
 
 ```
-Which will generate a image like the follwing
+Which will generate a image like the follwing :
 
+![alt text](imgs/stereoscope-deconvseq-DWLS-boxplot.png "Comparison of Methods")
+
+Where the dashed line represents the performance upon randomly sampling propotrions from a homogenous Dirichlet
+distribution (concentration 1), the shaded blue region represent the 95% confidence interval.
+
+<a id="bc-add"></a>
+## Using pre-estimated parameters
+Occasionaly you might encounter a scenario where you have run steroscope in a previous analysis and now want to use the
+same single cell data set but different (or more) ST data. The way we have implemented our method and built stereoscope
+allows you to this in a seamless manner.
+
+To exemplify - we looked at breast cancer using one ST section and a curated Lung Cancer single cell data set. But
+perhaps we have another set of ST breast cancer data which we would like to map the very same single cell data to.
+
+In the original ST [publication](https://science.sciencemag.org/content/353/6294/78.long) 12 MOB (Mouse Olfactory Bulb) and 4 Breast Cancer sections were presented, let us analyze
+the breast cancer samples using the Lung Cancer Data set.
+
+![alt text](imgs/bc-he.jpg "HE-image of from breast cancer tissue in original publication")
+
+Above you see parts of Figure 4 in the original publication, displaying some of the breast cancer tissue.
+
+### 1. Downloading data
+The data is available at
+[this](https://www.spatialresearch.org/resources-published-datasets/doi-10-1126science-aaf2403/) link, download the four
+breast cancer samples and put them in ```data/add-bc``` either interactively (make sure to rename them as below) or using the terminal.
+
+```console
+foo@bar:~$ cd data
+foo@bar:~$ mkdir add-bc
+foo@bar:~$ cd add-bc
+foo@bar:~$ for ii in 1 2 3 4; do curl https://www.spatialresearch.org/wp-content/uploads/2016/07/Layer${ii}_BC_count_matrix-1.tsv --output st-bc${ii}.tsv; done
+```
+Once the download is done you should have the following content in your ```data/add-bc``` folder:
+
+```console
+foo@bar:~$ ls -1
+st-bc1.tsv
+st-bc2.tsv
+st-bc3.tsv
+st-bc4.tsv
+```
+
+This files are already processed, only having spots under the tissue and uses HGNC gene symbols - hence there is no need
+to pre-process our data.
+
+### 2. Running stereoscope
+
+Now you can find the estimated single cell parameters (rates and logits) for the Lung Cancer data set within
+```data/params-lc``` folder. To use these in conjuction with the newly downloaded breast cancer ST data simply do : 
+
+```console
+foo@bar:~$ stereoscope run --sc_fit ../params-lc/R*.tsv ../params/logits*.tsv --st_cnt st-bc*.tsv --ste 50000 -stb 256 -lr 0.01 --gpu -o ../../res/bc-add
+
+```
+
+The flag  ```--sc_fit``` expects two positional arguments, the first being the path to the rates and the second being
+the path to the logits.
+
+### 3. Visualization
+We can visualize the resullts by using the ```look``` module of stereoscope (see above for more detailed description).
+This is simply done by :
+
+```con
+foo@bar:~$ cd ../../res/bc-add
+foo@bar:~$ stereoscope look -pp bc*/W*tsv -ms 80 -nc 2 -sc i -sb s -c "umap" -g -o viz
+```
+Which will generate a set of images like these : 
