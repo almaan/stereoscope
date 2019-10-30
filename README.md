@@ -1,20 +1,22 @@
 # Integration of Single Cell and Spatial Transcriptomics Data
 
 This repository contains the Python package **stereoscope**, being the implementation of the method presented in the
-paper. Additionally scripts used to preprocess, visualize and compare data/results presented in the paper is also found
-herewithin.
+paper. In addition, scripts used to preprocess, visualize and compare data/results presented in the paper are also found are also included.
 
 Below you will find  examples of how to use stereoscope, whilst these are cast as a guide in how to reproduce the
-results the procedure can of course be generalized to any data set.
+results the procedure can of course be generalized and applied to any data set. The examples included are
+
+1. [Reproducing the mouse brain analysis](#reproducing-the-mouse-brain-analysis): Conducting the complete analysis of the mouse brain presented in the paper,
+   from downloading data to visualizing the results
+2. [Reproducing the method comparison](#reproducing-the-method-comparion): Generation of synthetic data, running all three methods and comparing them
 
 ## Installing stereoscope
-To perform any of the analyses below you need to install stereoscope, we have also prepared some datasets for you (found
-within this github repo) hence the first thing we will do is to clone this repository. Open your terminal and change
-to a suitable directory - then enter:
+To make things easy for you, we have included installation files for stereoscope, a lot of scripts and some data sets in
+this repo, thus we will begin by cloning it. Open your terminal and change to your desired
+download directory - then enter the following:
 
 ```console
 foo@bar:~$ git clone https://github.com/almaan/stereoscope 
-
 ```
 
 Now let's start by installing stereoscope, you can easily do this by the following commands
@@ -23,7 +25,7 @@ foo@bar:~$ cd stsc
 foo@bar:~$ ./setup install --user
 
 ```
-This should both give you access to the stereoscope python package (stsc) and provide you with a command line interface
+This should give you access both to the stereoscope python package (stsc) and the stereoscope command line interface
 (CLI) meaning you can conduct the analysis from the terminal. To make sure the installation was successfull, we
 will run two tests:
 
@@ -33,36 +35,39 @@ stereoscope : 0.2.0
 foo@bar:~$ stereoscope test
 successfully installed stereoscope CLI
 ```
-If you cannot access stereoscope from the command line, and get something like
+If you cannot access stereoscope from the command line, and receive a message like
 ```console
 foo@bar:~$ stereoscope test
 bash stereoscope: command not found..
 
 ```
 
-make sure that your install location is a part of your PATH variable. Including the ```--user``` flag during installation,
-should place your packages in  ~/.local directory. Thus you can likely, 
-fix this by entering the follwing into your terminal:
-
+It means that your your install location is not a part of your PATH variable. Including the ```--user``` flag during
+installation, should place your packages in  ~/.local directory. Thus a simple fix is possible by entering the follwing
+into your terminal:
 
 ```console
 foo@bar:~$ export PATH=$PATH:/user/home/.local/bin
 ```
-(This a line you may want to add to your ~/.bashrc file, or equivalent, for a more seamless usage in the future)
+NOTE : This a line you may want to consider adding to your ~/.bashrc file, or equivalent, for a more seamless usage in
+the future - otherwise you will have to repeat every time you open a new terminal
 
-Having installed stereoscope, we can now start with the analysis.
+Having installed stereoscope, we are ready to start with the analysis.
 
+---
 
 ## Reproducing The Mouse Brain Analysis
 Let us begin by reproducing the results presented for the mouse brain (hippocampal) region. Here we will go through the
-whole workflow from downloading the data, preprocessing, analysis and visualization. If you aren't that keen on doing
-the first parts and want to get immediately to the analysis part, you can skip step 1-2 and use the already processed
+whole workflow including downloading the data, preprocessing, analysis and visualization. If you aren't that keen on doing
+the first parts and want to get started with the analysis part, you can skip step 1-2 and use the already processed
 data found in the data/mousebrain folder, just unzip these files into a folder named data/curated.
 
 
 ### 1. Downloading the data
-The data was originally downloaded from [mousebrain.org](http://mousebrain.org/tissues.html), where we downloaded the
-loom-file originating from the Hippocampus. You can either download this set via the web browser, or the terminal using
+The data we used in the paper is downloaded from [mousebrain.org](http://mousebrain.org/tissues.html), where we
+downloaded the loom-file containing cells from the Hippocampus. If you do not have loompy installed, please see
+[this](http://loompy.org/) link for further instructions. You can either download the data set via the web browser, or the
+terminal using :
 
 ```console
 foo@bar:~$ cd data
@@ -74,17 +79,17 @@ foo@bar:~$ curl -O https://storage.googleapis.com/linnarsson-lab-loom/l1_hippoca
 ### 2. Prepare Data
 
 #### 2.1 Subsample Single Cell Data
-We will subsample the single cell data, this is not a requirement, but it allows us to run the analysis a bit faster. We will
-do this in two steps, first we'll create a modified loom-file where we have added a new column joining the ''Cluster''
-and ''Class'' labels together, this adds some interpretability to the cluster labels. Enter the following in the
-terminal:
+We will subsample the single cell data, this is not a requirement, but it allows us to run the analysis a bit faster.
+First we will create a modified loom-file where we have added a new column joining the ''Cluster'' and ''Class'' labels
+together, this adds some interpretability to our labels compared to just using cluster indices. Enter the following in
+the terminal:
 
 ```console
 foo@bar:~$ ../../preprocess/hippocampus/create-mod-loom.py l1_hippocampus.loom .
 successfully created modifed loom-file >> mod_l1_hippocampus.loom
 ```
-Next we subsample out dataset, using a lower bound and upper bound (See Methods) of 25 repsectively 250 cells per celltype. Do this by
-entering the following into the terminal:
+Next we subsample out dataset, using a lower and upper bound (See Methods) of 25 repsectively 250 cells per
+celltype. Do this by entering:
 
 ```console
 foo@bar:~$ ../../preprocess/hippocampus/subsample-data.py -lf mod_l1_hippocampus.loom -o ../curated -lb 25 -ub 250 -cn
@@ -102,12 +107,13 @@ Astrocytes_44 | Used 41 cells
 ....
 
 ```
-This will create three files in the data/curated folder - a count matrix of the cells included in the set, a meta-file
-containing their respective labels and a ''stats-file'' which displays the composition of the set. All belonging to the
-same set are marked with a unique identifier, which is time and date-based, your identifier will therefore be different
-from what you see here. As you also can see not all ''cell types'' were included, due to having very few members. 
+This will create three files in the data/curated folder - a **count matrix** of the cells included in the set, a
+**meta-file** containing their respective labels and a ''**stats-file**'' which displays the composition of the set. All
+files belonging to the same set are marked with a unique identifier which is time and date-based (here :
+20191029082957812352), your identifier will therefore be different from the one above. As you may notice, not all
+''cell types'' were included, these types did not have more than 25 members (cells).
 
-#### 2.2 Unzip ST-data
+#### 2.2 ST-data
 We have included the two sections of the mouse brain used in the paper as .tsv files in the repo, there is no need to
 preprocess these - but we have zipped them to save some space. Unzip these files and place in the data/curated folder as
 well - either interactively or for example entering the following into the terminal:
@@ -132,21 +138,22 @@ st-hippo1.tsv
 st-hippo2.tsv
 
 ```
-####2.3 Format data
+#### 2.3 Format data
 The ouput from the subsampling and the ST data that we provide you with will already be given in the correct format,
-hence you will not have to do any additional work here; still we here list what type of input files and what format
-that is required in order to run stereoscope.
+hence you will not have to do any additional work. However, we will shortly describe what type of files are required and
+how they should be formatted in order to run stereoscope : 
 
 * **Single Cell Count Data File** - A .tsv file with cells as rows and genes as columns, each cell (row) should have a unique label
 * **Single Cell Annotation Data** - A .tsv file with the same rownames as the count data file, either with one single column
   listing the annotations, or multiple columns where the column containing the labels should be named 'bio_celltype'
-* **Spatial Transciptomics (ST) count data** - A .tsv file containing with spots as rows and genes as columns
+* **Spatial Transcriptomics (ST) Count Data** - A .tsv file containing with spots as rows and genes as columns
 
 Some additional thing to keep in mind are:
-* Make sure that the ST and single cell data uses the same gene identifiers, i.e. that not one is using ENSEBL ids
-  whilst the other one has HGNC gene symbols.
-* Do not normalize your data - all counts should be given in raw counts
-
+* Make sure that your ST and single cell data uses the same gene identifiers. For example, having one set using ENSEMBL ids whilst
+  the other one has HGNC gene symbols will not work. However as long as the ids match, stereoscope can work with _any_
+  type of identifiers.
+* Do **not normalize** your data - the model relies on using raw count data, your gene counts should be thus always be
+  integer numbers.
 
 
 
@@ -167,7 +174,7 @@ the following specifics in our analysis
 | learning rate | 0.01|
 | gpu | True |
 
-To run the analysis enter the following into your terminal
+To run the analysis enter the following into your terminal :
 
 ```console
 foo@bar:~$ cd ../../res
@@ -178,35 +185,37 @@ foo@bar:~$ stereoscope run --sc_cnt ../data/curated/*cnt*.tsv --sc_labels ../dat
 
 Epoch : 211  /75000 | Loss : 3.004263E+07 | [                     ]
 ```
-This will create a subfolder named "hippo_1" in the res folder, where all results and data related to this analysis will
-be found.
+This will create a subfolder named "hippo_1" in the res folder, where all results,logs and data related to this analysis
+will eventually be found.
 
 For more information regarding which arguments and configurations you can make to your analysis use
 ```console
 foo@bar:~$ stereoscope run -h
 ```
 
-### 3.2 Insepect progress
-Even with a GPU the analysis will take some time to complete, and whilst you have the progress bar show the current
-status of the process - it's also of interest to put this into a broader perspective and look at the progress
+### 3.2 Supervising the progress
+
+Even with a GPU the analysis will take some time to complete. Whilst the progress bar shows the current
+status - it's also of interest to put this into a broader perspective and track the progress
 over time. We can do so by the following command :
 
 ```
 foo@bar:~$ stereoscope progress -lf hippo_1/sc_loss*txt & disown
 
 ```
-This will open up a matplotlib interactive window, where you can zoom and move around, being updated every 10 seconds where you can see how the loss has
-changed over time. By appending ```& disown``` to the command, allows us to still use the terminal and won't kill the job
-if we were to exit the shell, if your shell does not support this command you can use ```nohup``` instead (to be put before
-the command rather than after).
+This will open up a matplotlib interactive window, where you can zoom and move around. The plot will be updated every 10
+seconds where you can see how the loss has changed over time. Appending ```& disown``` to the command, allows us to keep
+on using the same terminal window and won't kill the job if we were to exit, if your shell does not support
+the ```disown``` command you can try ```nohup``` instead (to be put before the command rather than after). Below is just
+an example of what the plot would look like
 
 ![alt text](https://github.com/almaan/stscpaper/blob/master/imgs/lossprog.png?raw=true "Progress")
 
-### 4. Inspect Results
+### 4. Inspection of Results
 
-**4.1 Orienting the of results**
+#### 4.1 Orienting the results
 
-When the complete analysis is done your res folder should contain the following content
+Upon completeion of the analysis. The folder ```res/hippo_1``` folder should contain the following set of files :
 ```console
 foo@bar:~$ ls -1
 logits.2019-10-29090750.880065.tsv
@@ -219,7 +228,7 @@ st_loss.2019-10-29090750.880065.txt
 st_model.2019-10-29090750.880065.pt
 stsc.2019-10-29090750.880065.log
 ```
-Where we also have
+With the subfolder content being :
 ```console
 foo@bar:~$ ls st-hippo*/ 
 st-hippo1/:
@@ -230,9 +239,9 @@ W.2019-10-29090750.880065.tsv
 
 ```
 
-The content of these ''W-files'' are the results that we are interested in, every section has its own ouput folder,
+These ''W-files'' are the results that we are interested in, every section has its own ouput folder,
 whilst the proportion estimate names are shared. These files are given in a matrix format [n_spots x n_types] where each
-element represent the proportion of a cell type within a specific spot. To further illustrate
+element represent the proportion of a cell type within a specific spot. To further illustrate :
 
 ```console
 foo@bar:~$ head st-hippo1/W*tsv -n 5 | cut -f 1-5 | column -t
@@ -242,11 +251,11 @@ foo@bar:~$ head st-hippo1/W*tsv -n 5 | cut -f 1-5 | column -t
 15.87x9.01     0.017025681    0.017077405    0.016912553    0.016671246
 5.83x27.97     0.019220736    0.018679986    0.017026993    0.017045338
 ```
-Whilst it would be legitimate to put a threshold on some of these values; for example setting all proportions lower than
-a certain value to zero and renormalize. We choose to keep all values in the analysis - choose whatever strategy you
-feel is most appealing.
 
-**4.2 Visualizing results**
+Whilst one could justify the usage of a ''threshold''; for example setting all proportions lower than
+a certain value to zero and renormalize. We prefer not to adjust results and keep all values.
+
+**4.2 Visualization**
 
 We include a tool for quick visualization of the results in the stereoscope package - to run this simply do:
 
@@ -276,7 +285,7 @@ foo@bar:~$ stereoscope look -h
 
 ```
 
-For a more informative visualization you could also overlay the spots on the tissue, to better see how the spatial patterns
+For a more informative visualization you could also overlay the spots on the tissue image, to see how the spatial patterns
 relates to the morphology, like we did in our figures. This type of visualization is not a part of the stereoscope package,
 but we do provide scripts for this.
 
@@ -287,8 +296,9 @@ The material that you need for such visualization is:
 * Mask (optional)- mask to indicate which parts of the are to be included (transparent) resepectively excluded (black)
 
 We actually use resized images (30% downscaled), since the original images are unnecessarily large for our
-purpose of visualization. Still being in the res folder, all you have to do is run:
+intents. Still being in the res folder, all you have to do is run:
 
+MODIFY COMMMAND 
 ```console
 foo@bar:~$ ./map2he.py -i ../data/mouse/rsc/st-hippo1.jpg -t ..data/mouse/rsc/st-hippo1-tmat.txt -p st-hippo1/W*tsv -sf 0.3 -si -o he_overlay
 
@@ -299,13 +309,14 @@ Rendering type Astrocytes_40
 ....
 ```
 
-Resulting in images like these:
+Resulting in images like these (we rotated these images in our paper):
 
 ![alt text](imgs/overlay-example.png "HE-overlay")
 
 ## Reproducing the Method Comparion
 In the paper we compare stereoscope with two other methods [DWLS](https://github.com/dtsoucas/DWLS) and
-[deconvSeq](https://github.com/rosedu1/deconvSeq) using synthetic data, something we will reproduce in this section.
+[deconvSeq](https://github.com/rosedu1/deconvSeq) using synthetic data. This comparison is something we will reproduce
+in this section.
 
 ### 1. Generating Synthetic Data
 Begin by unzipping the file data/comp/comp-data.zip into the data/comp/ folder
@@ -332,23 +343,24 @@ validation.20190908194059502947.mta_data.tsv
 validation.20190908194059502947.stats.tsv
 
 ```
-As you can see, there is already a set of synthetic data prepared, you can use this data if you'd like to - then move
-ahead to step 2. However we will go through the full procedure here. Begin by removing the prepared data to not mix
-things up
+As you can see, there is already a set of synthetic data available, you can use this data if you'd like to - if so, then move
+ahead to step 2. However we will go through the full procedure here. 
 
-```konsole
+Begin by removing the prepared data, just to not mix things up :
+
+```console
 foo@bar:~$ rm synthetic/*
 ```
 
-The first step is to split our single cell data into a ''generation'' and ''validation'' set, preferably of equal size.
+We first  to split our single cell data into a ''generation'' and ''validation'' set, preferably of equal size.
 The single cell data set we use stems from the same hippocampus set we used in the previous example, but where we
-subsampled w.r.t. to Subclass labels rather than cluster labels.
+subsampled w.r.t. to _Subclass_ labels rather than cluster labels.
 
 ```console
 foo@bar:~$ ../../comparison/synthetic_data_generation/make_sc_sets.py real/hippo-real-sc-cnt.tsv real/hippo-real-sc-mta.tsv synthetic
 
 ```
-We now have a validation and generation data set
+You should now have the following four files in your synthetic folder :
 ```console
 foo@bar:~$ ls -1 synthetic/
 generation.20190908194059502947.cnt_data.tsv
@@ -356,16 +368,17 @@ generation.20190908194059502947.mta_data.tsv
 validation.20190908194059502947.cnt_data.tsv
 validation.20190908194059502947.mta_data.tsv
 ```
-Thus we can use the ''generation'' set to generate synthetic ST data, we will generate a set with 1000 spots and 500
-genes and tag the generated files with "st-hippo-comp". The validation set is set aside to be used as single cell data
-provided to each respective method upon deconvolution.
+We will use the ''generation'' set to generate synthetic ST data. We'll compose a set containing  1000 spots and 500
+genes. To easily keep track of our files we tag them with "st-hippo-comp". The validation set is set aside, in order to
+later be used as single cell data input to each respective method upon deconvolution.
 
 ```console
 foo@bar:~$ ../../comparison/synthetic_data_generation/make_st_set.py -c synthetic/generation.20190908194059502947.cnt_data.tsv -l synthetic/generation.20190908194059502947.mta_data.tsv -ns 1000 -ng 500 -o synthetic -t st-hippo-comp
 
 ```
-We now have synthetic ST expression data, where we know both the proportion and number of cells from each cell type
-within every spot.
+A total of three files will be generated  - ST expression data (counts), proportion values (proportions) and the number
+of cells (members). Since we know the actual proportions (ground truth) of cell types within each spot, this type of data can be used
+to compare the performance of different methods.
 
 ```console
 foo@bar:~$ ls -1 synthetic/
@@ -379,14 +392,15 @@ validation.20190908194059502947.mta_data.tsv
 
 ```
 
-
-
 ### 2. Running stereoscope
 We will run stereoscope with the following arguments (see previous section for more details regarding the stereoscope
 interface):
 
 ```console
-foo@bar:~$ stereoscope run --sc_cnt synthetic/valid*cnt* --sc_labels synthetic/valid*mta* -scb 256 -sce 50000 --st_cnt synthetic/counts.st-hippo-comp.tsv -ste 50000 -o ../res/comp-stereoscope --gpu -lr 0.1
+foo@bar:~$ stereoscope run --sc_cnt synthetic/valid*cnt* --sc_labels synthetic/valid*mta* -scb 256 \ 
+-sce 50000 --st_cnt synthetic/counts.st-hippo-comp.tsv -ste 50000 -o ../res/comp-stereoscope \
+--gpu -lr 0.1
+
 ```
 
 Where the results will be saved to ```comp-stereoscope``` in the ```res``` folder
@@ -394,7 +408,7 @@ Where the results will be saved to ```comp-stereoscope``` in the ```res``` folde
 ### 3. Running other methods
 
 Since none of the other two methods were designed with ST data in mind, we have written ''wrappers'' for them to use ST
-data as input and render similar output files. 
+data as input and render similar output files to steroscope. 
 
 **DWLS**
 
@@ -402,9 +416,9 @@ Small modifications were made to the DWLS code, since some of the provided funct
 were however minor and does not affect the method itself. We provide a ''modded'' version of their file
 ''Deconvolution_functions.R'' the two modifications we made are marked with the tag ```#MODIFICATION``` within the code.
 Using Seurat for the DE-analysis was not successfull, thus we choose the second alternative, MAST.  Negative values are
-also given for some proportions, we take all of these to be equal to zero.
+also given for some proportions, we take all of these to be equal to zero. 
 
-To run DWLS goto the main directory of the repo and enter
+To run DWLS go to the main directory of the repo and enter
 
 ```console
 foo@bar:~$ comparison/alternative_methods/DWLS/DWLS-implementation.R -wd res/comp-DWLS \
@@ -415,7 +429,9 @@ foo@bar:~$ comparison/alternative_methods/DWLS/DWLS-implementation.R -wd res/com
 **deconvSeq**
 
 We followed the instructions given in the [HTML-Vignette](https://rosedu1.github.io/deconvSeq/deconvSeq_vignette.html)
-for deconvSeq, in order to estimate the proportions - no cell cycle filtering is performed. To run deconvSeq got the main directory of the repo and enter
+for deconvSeq, in order to estimate the proportions - no cell cycle filtering is performed.
+
+To run deconvSeq got the main directory of the repo and enter :
 
 ```console
 foo@bar:~$ comparison/alternative_methods/deconvSeq/deonvSeq-implementation.R \

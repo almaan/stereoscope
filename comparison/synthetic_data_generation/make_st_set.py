@@ -13,7 +13,7 @@ import torch.distributions as dists
 def _assemble_spot(cnt : np.ndarray,
                   labels : np.ndarray,
                   alpha : float = 1.0,
-                  fraction : float = 0.05,
+                  fraction : float = 0.1,
                   )->Dict[str,t.Tensor]:
 
     """Assemble single spot
@@ -72,27 +72,28 @@ def _assemble_spot(cnt : np.ndarray,
     # select which types to include
     pick_types = t.randperm(n_labels)[0:n_types]
     # pick at least one cell for spot
-    members = t.zeros(n_types)
+    members = t.zeros(n_labels).type(t.float)
     while members.sum() < 1:
         # draw proportion values from probability simplex
         member_props = dists.Dirichlet(concentration = alpha * t.ones(n_types)).sample()
         # get integer number of cells based on proportions
-        members = (n_cells * member_props).round()
+        members[pick_types] = (n_cells * member_props).round()
 
     # get proportion of each type
-    props = t.zeros(n_labels)
-    props[pick_types] = members / members.sum()
-    # get number of cells from each cell type
+    props = members / members.sum()
+    # convert to ints
     members = members.type(t.int)
+    # get number of cells from each cell type
 
     # generate spot expression data
     spot_expr = t.zeros(cnt.shape[1]).type(t.float32)
+
     for z in range(n_types):
         # get indices of selected type
         idx = np.where(labels == uni_labs[pick_types[z]])[0]
         # pick random cells from type
         np.random.shuffle(idx)
-        idx = idx[0:members[z]]
+        idx = idx[0:members[pick_types[z]]]
         # add fraction of transcripts to spot expression
         spot_expr +=  t.tensor((cnt[idx,:]*fraction).sum(axis = 0).round().astype(np.float32))
 
@@ -101,8 +102,6 @@ def _assemble_spot(cnt : np.ndarray,
             'proportions':props,
             'members': members,
            }
-
-
 
 def assemble_data_set(cnt : pd.DataFrame,
                       labels : pd.DataFrame,
@@ -150,6 +149,8 @@ def assemble_data_set(cnt : pd.DataFrame,
     st_prop = np.zeros((n_spots,n_labels))
     st_memb = np.zeros((n_spots,n_labels))
 
+    np.random.seed(1337)
+    t.manual_seed(1337)
     # generate one spot at a time
     for spot in range(n_spots):
         spot_data = assemble_fun(cnt.values,
