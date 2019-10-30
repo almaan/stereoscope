@@ -6,10 +6,10 @@ paper. In addition, scripts used to preprocess, visualize and compare data/resul
 Below you will find  examples of how to use stereoscope, whilst these are cast as a guide in how to reproduce the
 results the procedure can of course be generalized and applied to any data set. The examples included are
 
-1. [Reproducing the mouse brain analysis](#reprodmb): Conducting the complete analysis of the mouse brain presented in the paper,
+1. [Reproducing the mouse brain analysis](##reprodmb): Conducting the complete analysis of the mouse brain presented in the paper,
    from downloading data to visualizing the results
-2. [Reproducing the method comparison](#reprodcomp): Generation of synthetic data, running all three methods and comparing them
-3. [Using pre-estimated parameters](#bc-add) : Examining four additional breast cancer samples, applying already
+2. [Reproducing the method comparison](##reprodcomp): Generation of synthetic data, running all three methods and comparing them
+3. [Using pre-estimated parameters](##bc-add) : Examining four additional breast cancer samples, applying already
    estimated single cell parameters to a ST data set.
 
 ## Installing stereoscope
