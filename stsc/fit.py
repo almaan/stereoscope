@@ -174,6 +174,7 @@ def fit_st_data(st_data : D.CountData,
     R = R.loc[inter,:]
     logits = logits.loc[inter,:]
 
+    t.manual_seed(1337)
     # generate ST model
     st_model = M.STModel(st_data.M,
                          R = R.values,
@@ -190,7 +191,6 @@ def fit_st_data(st_data : D.CountData,
                           ),
                   file = sys.stderr,
                  )
-
     # estimate proportion values
     fit(dataset = st_data,
         model = st_model,
@@ -260,6 +260,7 @@ def fit_sc_data(sc_data : D.CountData,
     """
 
 
+    t.manual_seed(1337)
     # define single cell model
     sc_model = M.ScModel(n_genes = sc_data.G,
                          n_celltypes = sc_data.Z,

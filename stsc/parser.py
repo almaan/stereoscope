@@ -11,6 +11,7 @@ def make_parser():
     subparsers = parser.add_subparsers(dest = 'command')
     run_parser = subparsers.add_parser("run")
     look_parser = subparsers.add_parser("look")
+    test_parser = subparsers.add_parser("test")
     progress_parser = subparsers.add_parser('progress')
 
 # Run Parser Arguments ---------------------------------------------

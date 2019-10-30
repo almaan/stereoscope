@@ -1,1 +1,1 @@
-__version__ == 'stereoscope : 0.2.0"
+__version__ =  "stereoscope : 0.2.0"
