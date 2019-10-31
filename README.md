@@ -12,8 +12,8 @@ results the procedure can of course be generalized and applied to any data set. 
 3. [Using pre-estimated parameters](#bc-add) : Examining four additional breast cancer samples, applying already
    estimated single cell parameters to a ST data set.
 
-Note that whilst the ST data will be publically available upon publication, these files are currently password
-protected - with access given to reviewers.
+_Note :  whilst the ST data will be publicly available upon publication, these files are currently password
+protected - with access given to reviewers._
 
 ## Installing stereoscope
 To make things easy for you, we have included installation files for stereoscope, a lot of scripts and some data sets in
@@ -67,7 +67,7 @@ Having installed stereoscope, we are ready to start with the analysis.
 Let us begin by reproducing the results presented for the mouse brain (hippocampal) region. Here we will go through the
 whole workflow including downloading the data, preprocessing, analysis and visualization. If you aren't that keen on doing
 the first parts and want to get started with the analysis part, you can skip step 1-2 and use the already processed
-data found in the data/mousebrain folder, just unzip these files into a folder named data/curated.
+data found in the ```data/mousebrain``` folder, just unzip these files into a folder named ```data/curated```.
 
 
 ### 1. Downloading the data
@@ -123,16 +123,36 @@ files belonging to the same set are marked with a unique identifier which is tim
 #### 2.2 ST-data
 We have included the two sections of the mouse brain used in the paper as .tsv files in the repo, there is no need to
 preprocess these - but we have zipped save space. Unzip these files and place them in the ```data/curated``` folder  -
-either interactively or for example entering the following into the terminal:
+either interactively or for example entering the following into the terminal and provide the password when prompted for it:
+
+
+[comment]: <>  (```console)
+[comment]: <> (foo@bar:~$ unzip ../mouse_brain/mouse-st-data.zip -d ))
+[comment]: <> (Archive:  ../mouse_brain/mouse-st-data.zip)
+[comment]: <> (inflating: ./st-hippo1.tsv) 
+[comment]: <> (inflating: ./st-hippo2.tsv)        
 
 ```console
-foo@bar:~$ unzip ../mouse_brain/mouse-st-data.zip -d .
-Archive:  ../mouse_brain/mouse-st-data.zip
-  inflating: ./st-hippo1.tsv         
-  inflating: ./st-hippo2.tsv         
+foo@bar:~$ 7z e mouse-st-data.zip
+
+7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
+
+Scanning the drive for archives:
+1 file, 7254353 bytes (7085 KiB)
+
+Extracting archive: mouse-st-data2.zip
+--
+Path = mouse-st-data.zip
+Type = zip
+Physical Size = 7254353
+
+    
+    Enter password (will not be echoed):
+
 ```
 
-If all steps have been successfull, this (below) is the content which you should have within the data/curated folder
+
+If all steps have been successfull, this (below) is the content which you should have within the ```data/curated``` folder
 
 ```console
 foo@bar:~$ ls -1
@@ -198,7 +218,7 @@ For more information regarding which arguments and configurations you can make t
 foo@bar:~$ stereoscope run -h
 ```
 
-### 3.2 Tracking progress
+### 3.2 Monitoring progress
 
 Even with GPU resources the analysis will take some time to complete. Whilst the progress bar shows the current
 status - it's also of interest to put this into a broader perspective and track the progress
@@ -335,18 +355,17 @@ foo@bar:~$ ls -1
 comp-data.zip
 
 real:
-ori-sc-cnt.tsv
-ori-sc-mta.tsv
+hippo-real-sc-cnt.tsv
+hippo-real-sc-mta.tsv
 
 synthetic:
+counts.st-hippo-comp.tsv
 generation.20190908194059502947.cnt_data.tsv
 generation.20190908194059502947.mta_data.tsv
-generation.20190908194059502947.stats.tsv
-proportions.hippo.tsv
-st-counts.hippo.tsv
+members.st-hippo-comp.tsv
+proportions.st-hippo-comp.tsv
 validation.20190908194059502947.cnt_data.tsv
 validation.20190908194059502947.mta_data.tsv
-validation.20190908194059502947.stats.tsv
 
 ```
 As you can see, there is already a set of synthetic data available, you can use this data if you'd like to - if so, then move
@@ -517,13 +536,14 @@ st-bc3.tsv
 st-bc4.tsv
 ```
 
-This files are already processed, only having spots under the tissue and uses HGNC gene symbols - hence there is no need
+These files are already processed, only having spots under the tissue and uses HGNC gene symbols - hence there is no need
 to pre-process our data.
 
 ### 2. Running stereoscope
 
-Now you can find the estimated single cell parameters (rates and logits) for the Lung Cancer data set within
-```data/params-lc``` folder. To use these in conjuction with the newly downloaded breast cancer ST data simply do : 
+You will find the estimated single cell parameters (rates and logits) for the Lung Cancer data set within the
+```data/params-lc.zip``` file, which when unzipped will create a folder ```data/params-lc```.  To use these in
+conjuction with the newly downloaded breast cancer ST data simply do : 
 
 ```console
 foo@bar:~$ stereoscope run --sc_fit ../params-lc/R*.tsv ../params/logits*.tsv --st_cnt st-bc*.tsv \
