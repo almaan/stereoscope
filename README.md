@@ -126,12 +126,6 @@ preprocess these - but we have zipped save space. Unzip these files and place th
 either interactively or for example entering the following into the terminal and provide the password when prompted for it:
 
 
-[comment]: <>  (```console)
-[comment]: <> (foo@bar:~$ unzip ../mouse_brain/mouse-st-data.zip -d ))
-[comment]: <> (Archive:  ../mouse_brain/mouse-st-data.zip)
-[comment]: <> (inflating: ./st-hippo1.tsv) 
-[comment]: <> (inflating: ./st-hippo2.tsv)        
-
 ```console
 foo@bar:~$ 7z e mouse-st-data.zip
 
