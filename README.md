@@ -134,7 +134,7 @@ foo@bar:~$ 7z e mouse-st-data.zip
 Scanning the drive for archives:
 1 file, 7254353 bytes (7085 KiB)
 
-Extracting archive: mouse-st-data2.zip
+Extracting archive: mouse-st-data.zip
 --
 Path = mouse-st-data.zip
 Type = zip
@@ -142,14 +142,14 @@ Physical Size = 7254353
 
     
     Enter password (will not be echoed):
+....
 
+foo@bar:~$ mv st-hippo*tsv curated/
 ```
-
-
 If all steps have been successfull, this (below) is the content which you should have within the ```data/curated``` folder
 
 ```console
-foo@bar:~$ ls -1
+foo@bar:~$ ls -1 curated/*
 20191029082957812352.cnt_data.tsv
 20191029082957812352.mta_data.tsv
 20191029082957812352.stats.tsv
