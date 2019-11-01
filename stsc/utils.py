@@ -240,7 +240,7 @@ class SimpleProgressBar:
         progress = self.symbol*int((epoch / self.delta))
         print(f"\r"
               f"Epoch : {epoch +1:<{self.ndigits}}/{self.mx:<{self.ndigits}}"
-              f" | LL : {value:9E}"
+              f" | Loss : {value:9E}"
               f" | \x1b[1;37m["
               f" \x1b[0;36m{progress:<{self.len}}"
               f"\x1b[1;37m]"
@@ -356,7 +356,7 @@ def read_file(file_name : str,
         DataFrame with content of file
 
     """
-    supported = ['tsv']
+    supported = ['tsv','gz']
     extension = osp.splitext(file_name)[1][1::]
 
     if extension not in supported:
@@ -370,11 +370,13 @@ def read_file(file_name : str,
 
         sys.exit(-1)
 
-    elif extension == 'tsv':
+    elif extension == 'tsv' or extension == 'gz':
         try:
+            compression = (None if extension == 'tsv' else 'gzip')
             file = pd.read_csv(file_name,
                                header = 0,
                                index_col = 0,
+                               compression = compression,
                                sep = '\t')
         except:
             print(' '.join([f"Something went wrong",
@@ -384,7 +386,7 @@ def read_file(file_name : str,
                           )
                  )
 
-        return file
+    return file
 
 def write_file(file : pd.DataFrame,
                opth : str,
