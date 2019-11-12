@@ -13,6 +13,7 @@ setup(name='STereoSCope',
             packages=['stsc'],
             install_requires=[
                             'torch',
+                            'numba',
                             'numpy',
                             'pandas',
                             'logging',

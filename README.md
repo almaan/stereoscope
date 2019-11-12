@@ -27,7 +27,7 @@ foo@bar:~$ git clone https://github.com/almaan/stereoscope
 Now let's start by installing stereoscope, you can easily do this by the following commands
 ```bash
 foo@bar:~$ cd stsc
-foo@bar:~$ ./setup install --user
+foo@bar:~$ ./setup.py install --user
 
 ```
 This should give you access both to the stereoscope python package (stsc) and the stereoscope command line interface
