@@ -1,9 +1,9 @@
-# Integration of Single Cell and Spatial Transcriptomics Data
+# Spatial mapping of cell types by integration of transcriptomics data
 
-This repository contains the Python package **stereoscope**, being the implementation of the method presented in the
+This repository contains the Python package **Stereoscope**, being the implementation of the method presented in the
 paper. In addition, scripts used to preprocess, visualize and compare data and results presented in the paper are also included.
 
-Below you will find  examples of how to use stereoscope, whilst some of these are cast as a guide in how to reproduce the
+Below you will find  examples of how to use Stereoscope, whilst some of these are cast as a guide in how to reproduce the
 results the procedure can of course be generalized and applied to any data set. The examples included are
 
 1. [Reproducing the mouse brain analysis](#reprodmb): Conducting the complete analysis of the mouse brain presented in the paper,
@@ -12,11 +12,11 @@ results the procedure can of course be generalized and applied to any data set. 
 3. [Using pre-estimated parameters](#bc-add) : Examining four additional breast cancer samples, applying already
    estimated single cell parameters to a ST data set.
 
-_Note :  whilst the ST data will be publicly available upon publication, these files are currently password
-protected - with access given to reviewers._
+_Note: Whilst the ST data will be publicly available upon publication, these files are currently password
+protected - access will be given to reviewers._
 
 ## Installing stereoscope
-To make things easy for you, we have included installation files for stereoscope, a lot of scripts and some data sets in
+To make things easy for you, we have included installation files for Stereoscope, a lot of scripts and some data sets in
 this repo, thus we will begin by cloning it. Open your terminal and change to your desired
 download directory - then enter the following:
 
@@ -24,13 +24,16 @@ download directory - then enter the following:
 foo@bar:~$ git clone https://github.com/almaan/stereoscope 
 ```
 
-Now let's start by installing stereoscope, you can easily do this by the following commands
+Now let's start by installing Stereoscope, you can easily do this by using the provided setup file. If you are working
+with conda or virtual environments, this is where you should create and source a new environment.
+
+the following commands
 ```bash
 foo@bar:~$ cd stsc
 foo@bar:~$ ./setup.py install --user
 
 ```
-This should give you access both to the stereoscope python package (stsc) and the stereoscope command line interface
+You should now have access to both the stereoscope python package (stsc) and the stereoscope command line interface
 (CLI) meaning you can conduct the analysis from the terminal. To make sure the installation was successfull, we
 will run two tests:
 
@@ -64,10 +67,12 @@ Having installed stereoscope, we are ready to start with the analysis.
 <a id="reprodmb"></a>
 
 ## Reproducing The Mouse Brain Analysis
-Let us begin by reproducing the results presented for the mouse brain (hippocampal) region. Here we will go through the
-whole workflow including downloading the data, preprocessing, analysis and visualization. If you aren't that keen on doing
-the first parts and want to get started with the analysis part, you can skip step 1-2 and use the already processed
-data found in the ```data/mousebrain``` folder, just unzip these files into a folder named ```data/curated```.
+Let us begin by reproducing the results presented for the mouse brain (hippocampal region), to briefly remind you what
+that means; we will analyze two ST-sections of the mouse brain (jointly) and map single cell data from the resource
+[mousebrain.org](http://mousebrain.org) onto it. Here we will go through the whole workflow including downloading the
+data, preprocessing, analysis and visualization. If you aren't that keen on doing the first parts and want to get
+started with the analysis part, you can skip step 1-2 and use the already processed data found in the
+```data/mousebrain``` folder, just unzip these files into a folder named ```data/curated```.
 
 
 ### 1. Downloading the data
@@ -160,7 +165,7 @@ st-hippo2.tsv
 #### 2.3 Data Fromatting
 The ouput from the subsampling and the ST data which we provide you with are given in the correct formats,
 hence you will not have to do any additional work. However, we will shortly describe what type of files are required and
-how they should be formatted in order to run stereoscope : 
+how they should be formatted in order to run Stereoscope : 
 
 * **Single Cell Count Data File** - a tsv file with cells as rows and genes as columns, each cell (row) should have a unique label
 * **Single Cell Annotation Data** - a tsv file with the same rownames as the count data file, either with one single column
@@ -169,7 +174,7 @@ how they should be formatted in order to run stereoscope :
 
 Some additional things to keep in mind are:
 * Make sure that your ST and single cell data uses the same gene identifiers. For example, having one set using ENSEMBL ids whilst
-  the other one has HGNC gene symbols will not work. However as long as the ids match, stereoscope can work with _any_
+  the other one has HGNC gene symbols will not work. However as long as the ids match, Stereoscope can work with _any_
   type of identifiers.
 * Do **not normalize** your data - the model relies on using raw count data, your gene counts should thus always be
   integer numbers.
@@ -305,13 +310,13 @@ foo@bar:~$ stereoscope look -h
 ```
 
 For a more informative visualization you could also overlay the spots on the tissue image, to see how the spatial patterns
-relates to the morphology, like we did in our figures. This type of visualization is not a part of the stereoscope package,
+relates to the morphology, like we did in our figures. This type of visualization is not a part of the Stereoscope package,
 but we do provide scripts for this.
 
 The material that you need for such visualization is:
 * HE-image - image taken of the tissue, can be scaled but not cropped
 * Transformation Matrix - matrix that maps spot coordinates to pixel coordinates
-* Proportion Estimates - output from stereoscope analysis
+* Proportion Estimates - output from Stereoscope analysis
 * Mask (optional)- mask to indicate which parts of the area to be included (transparent) resepectively excluded (black)
 
 We actually use resized images (30% downscaled), since the original images are unnecessarily large for our
@@ -334,7 +339,7 @@ Resulting in images like these (we rotated these images in our paper):
 
 <a id="reprodcomp"></a>
 ## Reproducing the Method Comparion
-In the paper we compare stereoscope with two other methods [DWLS](https://github.com/dtsoucas/DWLS) and
+In the paper we compare Stereoscope with two other methods [DWLS](https://github.com/dtsoucas/DWLS) and
 [deconvSeq](https://github.com/rosedu1/deconvSeq) using synthetic data. This comparison is something we will reproduce
 in this section.
 
@@ -412,7 +417,7 @@ validation.20190908194059502947.mta_data.tsv
 ```
 
 ### 2. Running stereoscope
-We will run stereoscope with the following arguments (see previous section for more details regarding the stereoscope
+We will run Stereoscope with the following arguments (see previous section for more details regarding the Stereoscope
 interface):
 
 ```console
@@ -452,7 +457,7 @@ foo@bar:~$ comparison/alternative_methods/DWLS/DWLS-implementation.R -wd res/com
 -st data/comp/synthetic/counts*.tsv 
 ```
 
-This will generate an output file formatted like that of stereoscope, a matrix with dimensions [n_spots x n_types],
+This will generate an output file formatted like that of Stereoscope, a matrix with dimensions [n_spots x n_types],
 where each element represents the proportion of a specific type within a given spot.
 
 **deconvSeq**
@@ -475,7 +480,7 @@ such an error arise wait a minute and try again._
 
 Having estimated the proportions using all three methods, we can now compare them. As a performance metric we compute
 the RMSE between the actual proportion values within each spot and the estimated values. The results are visualizaed in a
-boxplot, and a one-sided test ([Wilcoxon signed-rank test](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wilcoxon.html)) is also conducted to see whether stereoscope
+boxplot, and a one-sided test ([Wilcoxon signed-rank test](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wilcoxon.html)) is also conducted to see whether Stereoscope
 performs better than the other methods.
 
 ```console
@@ -494,16 +499,24 @@ interval, based on these 1000 values.
 <a id="bc-add"></a>
 ## Using pre-estimated parameters
 Occasionaly you might face a scenario where you have run steroscope in a previous analysis and now want to use the
-same single cell data set but different (or more) ST data. The way we have implemented our method and built stereoscope
+same single cell data set but different (or more) ST data. The way we have implemented our method and built Stereoscope
 allows you to this in a seamless manner.
 
-To exemplify - in our publication we looked at breast cancer using one ST section and Lung Cancer single cell
-data. Now imaginge we found another set of ST breast cancer data which we would like to map the very same single cell
-data to.
+To exemplify - imagine you've been working with Lung Cancer ST and single cell data, and mapped the latter onto the
+former. Now imagine your collaborators telling you that they have a nice set of breast cancer data that they want you to
+analyze for them. Whilst a breast cancer data set would be ideal to work with, one initial analysis you could do is to
+simply see how the lung cancer single cell data maps onto the breast cancer spatial data - potenitally removing some of
+the lung-specific cells.
 
-In the original ST [publication](https://science.sciencemag.org/content/353/6294/78.long) 12 MOB (Mouse Olfactory Bulb)
-and 4 Breast Cancer sections were presented - we will analyze theses breast cancer samples using the Lung Cancer single
-cell data set. Fortunately half of the work is already done.
+We have downloaded and curated the data set presented in the publication _"Single-Cell Transcriptomics of Human and
+Mouse Lung Cancers Reveals Conserved Myeloid Populations across Individuals and Species", meaning we removed cell types
+which we considered as lung-specific such as ''club cells'' and ciliated cells. For further infomration of the data set
+see [Rapolas. et. al.](https://www.sciencedirect.com/science/article/abs/pii/S1074761319301268?via%3Dihub). We have also
+estimated the singel cell parameters for this data, which we provide you with (to simulate the above scenario).
+
+As for the ST data - in the original ST [publication](https://science.sciencemag.org/content/353/6294/78.long) 12 MOB
+(Mouse Olfactory Bulb) and 4 Breast Cancer sections were presented - we will analyze theses breast cancer samples using
+the Lung Cancer single cell data set. Fortunately half of the work is already done.
 
 ![alt text](imgs/bc-he.jpg "HE-image of from breast cancer tissue in original publication")
 
@@ -533,7 +546,7 @@ st-bc4.tsv
 These files are already processed, only having spots under the tissue and uses HGNC gene symbols - hence there is no need
 to pre-process our data.
 
-### 2. Running stereoscope
+### 2. Running Stereoscope
 
 You will find the estimated single cell parameters (rates and logits) for the Lung Cancer data set within the
 ```data/params-lc.zip``` file, which when unzipped will create a folder ```data/params-lc```.  To use these in
@@ -552,7 +565,7 @@ The flag  ```--sc_fit``` expects two positional arguments, the first being the p
 the path to the logits.
 
 ### 3. Visualization
-We can visualize the resullts by using the ```look``` module of stereoscope (see above for more detailed description).
+We can visualize the resullts by using the ```look``` module of Stereoscope (see above for more detailed description).
 This is simply done by :
 
 ```console
@@ -561,3 +574,8 @@ foo@bar:~$ stereoscope look -pp bc*/W*tsv -ms 80 -nc 5 -sc i -sb s -c "umap" -g 
 ```
 Which will generate a set of images like these : 
 ![alt text](imgs/bc-example.png "breast cancer example")
+
+We do not have a good reference like the Allen Brain Atlas to assess the quality of our results here, and we have no
+ambition of presenting these as new findings in a biological context. Rather, this is to be considered as partly a
+demonstration of how to use Stereoscope in different settings, but also how data sets from different tissues can be
+combined if one desires.
