@@ -1,6 +1,6 @@
 # Spatial mapping of cell types by integration of transcriptomics data
 
-This repository contains the Python package **Stereoscope**, being the implementation of the method presented in the
+This repository contains the Python package **stereoscope**, being the implementation of the method presented in the
 paper. In addition, scripts used to preprocess, visualize and compare data and results presented in the paper are also included.
 
 Below you will find  examples of how to use Stereoscope, whilst some of these are cast as a guide in how to reproduce the
