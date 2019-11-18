@@ -20,6 +20,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 plt.rcParams.update({
     "font.family": "Calibri",  # use serif/main font for text elements
     "text.usetex": True,     # use inline math for ticks
+    "figure.max_open_warning": 250,
     "pgf.rcfonts": False,    # don't setup fonts from rc parameters
     "pgf.preamble": [
          "\\usepackage{units}",          # load additional packages

@@ -14,6 +14,12 @@ prs.add_argument('-at','--add_total',
                  type = str,
                  default = None,
                 )
+
+prs.add_argument('-rn','--row_numbers',
+                 default = False,
+                 action = 'store_true',
+                )
+
 args = prs.parse_args()
 
 
@@ -36,11 +42,13 @@ if args.add_total is not None:
 
 
 print(f"Shape of Table {tbl.shape}")
-n_cols = tbl.shape[1]
+n_cols = tbl.shape[1] + (1 if args.row_numbers else 0)
 prms = {'column_format':'|l|' + 'c|'*(n_cols-1),
         'bold_rows':True,
-        'index':False,
+        'index':args.row_numbers,
         }
+
+tbl.index = pd.Index([str(int(x)+1) for x in tbl.index])
 
 tbl_ltx  = tbl.to_latex(buf = None,
                        **prms)
