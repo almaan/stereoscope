@@ -29,7 +29,7 @@ with conda or virtual environments, this is where you should create and source a
 
 the following commands
 ```bash
-foo@bar:~$ cd stsc
+foo@bar:~$ cd stereoscope
 foo@bar:~$ ./setup.py install --user
 
 ```
@@ -57,9 +57,6 @@ into your terminal:
 ```console
 foo@bar:~$ export PATH=$PATH:/user/home/.local/bin
 ```
-_NOTE : This a line you may want to consider adding to your ~/.bashrc file, or equivalent, for a more seamless usage in
-the future - otherwise you will have to repeat every time you open a new terminal_
-
 Having installed stereoscope, we are ready to start with the analysis.
 
 ---
