@@ -78,7 +78,7 @@ class CountData(Dataset):
             self.lbl = self.lbl[srt]
             self.cnt = self.cnt.iloc[srt,:]
 
-            self.zidx = t.tensor(self.zidx.flatten().astype(np.int))
+            self.zidx = t.LongTensor(self.zidx.flatten().astype(np.int))
 
         # Convert to tensor
         self.cnt = t.tensor(self.cnt.values.astype(np.float32))
