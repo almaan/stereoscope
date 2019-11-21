@@ -9,10 +9,10 @@ def make_parser():
     parser = arp.ArgumentParser()
 
     subparsers = parser.add_subparsers(dest = 'command')
-    run_parser = subparsers.add_parser("run")
-    look_parser = subparsers.add_parser("look")
+    run_parser = subparsers.add_parser("run",formatter_class=arp.ArgumentDefaultsHelpFormatter)
+    look_parser = subparsers.add_parser("look",formatter_class=arp.ArgumentDefaultsHelpFormatter)
     test_parser = subparsers.add_parser("test")
-    progress_parser = subparsers.add_parser('progress')
+    progress_parser = subparsers.add_parser('progress',formatter_class=arp.ArgumentDefaultsHelpFormatter)
 
 # Run Parser Arguments ---------------------------------------------
 
@@ -78,7 +78,6 @@ def make_parser():
                         help = ''.join(["number of epochs",
                                 " to be used in fitting",
                                 " of single cell data.",
-                                " Default is set to 2e4",
                                 ]))
 
 
@@ -110,7 +109,6 @@ def make_parser():
                                 " to be used in fitting",
                                 " of spatial transcriptomics",
                                 " data.",
-                                " Default is set to 2e4",
                                 ]))
 
     run_parser.add_argument('-o','--out_dir',
@@ -175,7 +173,7 @@ def make_parser():
                         default = 0,
                         type = float,
                         help = ''.join([f"minimum number of ",
-                                        f" counts for single cells",
+                                        f" counts for spots",
                                         f" to be included in",
                                         f" the analysis",
                                         ]))
@@ -183,7 +181,7 @@ def make_parser():
 
     run_parser.add_argument("-mc","--min_cells",
                         required = False,
-                        default = 0.0,
+                        default = 0,
                         type = float,
                         help = ''.join([f"minimum number of ",
                                         f" cells for genes",
@@ -193,7 +191,7 @@ def make_parser():
 
     run_parser.add_argument("-ms","--min_spots",
                         required = False,
-                        default = 0.0,
+                        default = 0,
                         type = float,
                         help = ''.join([f"minimum number of ",
                                         f" spots for genes",
@@ -245,7 +243,7 @@ def make_parser():
                         required = False,
                         default = 100,
                         help = ''.join([f"size of scatterplot",
-                                        f" markers. Default 100"
+                                        f" markers."
                                         ]))
 
     look_parser.add_argument("-o","--output",
