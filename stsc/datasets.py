@@ -78,7 +78,7 @@ class CountData(Dataset):
             self.lbl = self.lbl[srt]
             self.cnt = self.cnt.iloc[srt,:]
 
-            self.zidx = t.LongTensor(self.zidx.flatten().astype(np.int))
+            self.zidx = t.LongTensor(self.zidx.flatten().astype(np.int32))
 
         # Convert to tensor
         self.cnt = t.tensor(self.cnt.values.astype(np.float32))
@@ -136,7 +136,7 @@ class CountData(Dataset):
 
         self.cnt = self.cnt[ridx,:][:,cidx]
         self.lbl = self.lbl[ridx]
-        self.zidx = self.zidx[ridx]
+        self.zidx = self.zidx[ridx].type(t.LongTensor)
 
     @CountDataHelper.update
     def intersect(self,
@@ -363,6 +363,8 @@ def make_st_dataset(cnt_pths : List[str],
         sel = sel[0:topn_genes]
         cnt = cnt.iloc[:,sel]
 
+    dataset = CountData(cnt)
+
     # filter genes based on name
     if filter_genes:
         dataset.filter_genes()
@@ -373,7 +375,6 @@ def make_st_dataset(cnt_pths : List[str],
                            min_occurance = min_spots,
                            )
 
-    dataset = CountData(cnt)
 
     return dataset
 

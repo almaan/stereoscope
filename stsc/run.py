@@ -155,7 +155,7 @@ def run(prs : arp.ArgumentParser,
         logits = utils.read_file(args.sc_fit[1])
 
     # If ST data is provided estiamte proportions
-    if args.st_cnt is not None:
+    if args.st_cnt[0] is not None:
         # generate identifiying tag for each section
         sectiontag = list(map(lambda x: '.'.join(osp.basename(x).split('.')[0:-1]),args.st_cnt))
         log.info("fit st data section(s) : {}".format(args.st_cnt))

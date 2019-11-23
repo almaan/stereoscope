@@ -53,7 +53,7 @@ class ScModel(nn.Module):
 
     def _llnb(self,
               x : t.Tensor,
-              meta : t.Tensor,
+              meta : t.LongTensor,
               sf : t.Tensor,
              ) -> t.Tensor :
 
@@ -69,6 +69,8 @@ class ScModel(nn.Module):
         The log likelihood
 
         """
+
+
         log_unnormalized_prob = (sf*self.R[:,meta] * self.logsig(-self.o) +
                                  x * self.logsig(self.o))
 
@@ -83,7 +85,7 @@ class ScModel(nn.Module):
 
     def forward(self,
                 x : t.Tensor,
-                meta : t.Tensor,
+                meta : t.LongTensor,
                 sf : t.Tensor,
                 **kwargs,
                 ) -> t.Tensor :

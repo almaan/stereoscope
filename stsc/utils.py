@@ -372,12 +372,14 @@ def read_file(file_name : str,
 
     elif extension == 'tsv' or extension == 'gz':
         try:
-            compression = (None if extension == 'tsv' else 'gzip')
+            compression = ('infer' if extension == 'tsv' else 'gzip')
             file = pd.read_csv(file_name,
                                header = 0,
                                index_col = 0,
                                compression = compression,
                                sep = '\t')
+
+            return file
         except:
             print(' '.join([f"Something went wrong",
                             f"when trying to read",
@@ -386,7 +388,6 @@ def read_file(file_name : str,
                           )
                  )
 
-    return file
 
 def write_file(file : pd.DataFrame,
                opth : str,

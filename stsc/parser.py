@@ -9,10 +9,13 @@ def make_parser():
     parser = arp.ArgumentParser()
 
     subparsers = parser.add_subparsers(dest = 'command')
-    run_parser = subparsers.add_parser("run",formatter_class=arp.ArgumentDefaultsHelpFormatter)
-    look_parser = subparsers.add_parser("look",formatter_class=arp.ArgumentDefaultsHelpFormatter)
+    run_parser = subparsers.add_parser("run",
+                                       formatter_class=arp.ArgumentDefaultsHelpFormatter)
+    look_parser = subparsers.add_parser("look",
+                                        formatter_class=arp.ArgumentDefaultsHelpFormatter)
     test_parser = subparsers.add_parser("test")
-    progress_parser = subparsers.add_parser('progress',formatter_class=arp.ArgumentDefaultsHelpFormatter)
+    progress_parser = subparsers.add_parser('progress',
+                                            formatter_class=arp.ArgumentDefaultsHelpFormatter)
 
 # Run Parser Arguments ---------------------------------------------
 
@@ -52,6 +55,7 @@ def make_parser():
 
     run_parser.add_argument('-stc','--st_cnt',
                         required = False,
+                        default = None,
                         nargs = '+',
                         help = ''.join(["path to spatial",
                                " transcriptomics count file.",

@@ -18,6 +18,7 @@ import os
 import os.path as osp
 import argparse as arp
 import warnings
+from scipy import interpolate
 
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
@@ -285,7 +286,10 @@ def look(args,):
     sortsynonyms = dict(section = 'section',
                         s = 'section',
                         i = "internal",
-                        internal = "internal")
+                        internal = "internal",
+                        celltype = 'ct',
+                        ct='ct',
+                        type = 'ct')
 
     sort_by = sortsynonyms[args.sort_by]
     scale_by = sortsynonyms[args.scale_by]
@@ -311,7 +315,7 @@ def look(args,):
         titles = snames
         outer = n_celltypes
         inner = n_sections
-        fignames = [osp.join(odirs[0],''.join([celltypes[x],'.png']))\
+        fignames = [osp.join(odirs[0],''.join([celltypes[x],'.svg']))\
                     for x in range(n_celltypes)]
 
         suptitles = celltypes
@@ -321,7 +325,7 @@ def look(args,):
         titles = celltypes
         outer = n_sections
         inner = n_celltypes
-        fignames = [osp.join(odirs[x],''.join([snames[x],'.png'])) \
+        fignames = [osp.join(odirs[x],''.join([snames[x],'.svg'])) \
                     for x in range(n_sections)]
         suptitles = snames
 
@@ -333,10 +337,9 @@ def look(args,):
     figsize = ((n_cols + 1) * 3.5, (n_rows +1 ) * 3.5 + 5)
 
     for outside in range(outer):
-        fig,ax = plt.subplots(n_rows,n_cols,figsize = figsize)
-
+        fig,ax = plt.subplots(n_rows,n_cols,figsize = figsize,squeeze = False)
         if not isinstance(ax,np.ndarray):
-            ax = np.asarray(ax)
+            ax = np.array(ax)
         else:
             ax = ax.flatten()
         for inside in range(inner):
@@ -364,6 +367,10 @@ def look(args,):
                     )
 
             ax[inside].set_title(titles[inside])
+
+            if args.flip_y: ax[inside].invert_yaxis()
+
+
 
             hide_spines(ax[inner:ax.shape[0]])
 
