@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from os import mkdir
+from os import mkdir, getcwd
 import os.path as osp
 import argparse as arp
 
@@ -46,8 +46,11 @@ def run(prs : arp.ArgumentParser,
         prs.print_help()
         sys.exit(-1)
 
+    # set output directory to cwd if none specified
+    if args.out_dir is None:
+        args.out_dir = getcwd()
     # create output directory if non-existant
-    if not osp.exists(args.out_dir):
+    elif not osp.exists(args.out_dir):
         mkdir(args.out_dir)
 
     # instatiate logger
