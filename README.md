@@ -38,7 +38,7 @@ You should now have access to both the stereoscope python package (stsc) and the
 will run two tests:
 
 ```console
-foo@bar:~$ python3 -c "import stsc; print(stsc.__version__)"
+foo@bar:~$ python -c "import stsc; print(stsc.__version__)"
 stereoscope : 0.2.0
 foo@bar:~$ stereoscope test
 successfully installed stereoscope CLI
@@ -57,7 +57,7 @@ into your terminal:
 ```console
 foo@bar:~$ export PATH=$PATH:/user/home/.local/bin
 ```
-Having installed stereoscope, we are ready to start with the analysis.
+Having installed stereoscope, we are now ready to start with the analysis.
 
 ---
 
@@ -319,7 +319,6 @@ The material that you need for such visualization is:
 We actually use resized images (30% downscaled), since the original images are unnecessarily large for our
 intents. Still being in the res folder, all you have to do is run:
 
-MODIFY COMMMAND 
 ```console
 foo@bar:~$ ./map2he.py -i ../data/mouse/rsc/st-hippo1.jpg -t ..data/mouse/rsc/st-hippo1-tmat.txt -p st-hippo1/W*tsv -sf 0.3 -si -o he_overlay
 
@@ -499,7 +498,7 @@ Occasionaly you might face a scenario where you have run steroscope in a previou
 same single cell data set but different (or more) ST data. The way we have implemented our method and built Stereoscope
 allows you to this in a seamless manner.
 
-To exemplify - imagine you've been working with Lung Cancer ST and single cell data, and mapped the latter onto the
+To exemplify - imagine you've been working with lung cancer ST and single cell data, and mapped the latter onto the
 former. Now imagine your collaborators telling you that they have a nice set of breast cancer data that they want you to
 analyze for them. Whilst a breast cancer data set would be ideal to work with, one initial analysis you could do is to
 simply see how the lung cancer single cell data maps onto the breast cancer spatial data - potenitally removing some of
