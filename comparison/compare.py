@@ -438,7 +438,7 @@ def random_prop(true_prop : np.ndarray,
     # interval boundaries
     loss_list = np.array(loss_list)
     mu = loss_list.mean()
-    std = loss_list.mean()
+    std = loss_list.std()
     nsq = np.sqrt(niter)
 
     res = {'mu':mu,

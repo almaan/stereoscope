@@ -480,17 +480,16 @@ boxplot, and a one-sided test ([Wilcoxon signed-rank test](https://docs.scipy.or
 performs better than the other methods.
 
 ```console
-foo@bar:~$ comparison/compare.py -rf  res/comp-stereoscope/*/W*tsv res/comp-DWLS/proportions.tsv res/deconvSeq-proportions.tsv \
- -tf data/comp/synthetic/proportions.hippo.tsv -o res/comp -mn stereoscope DWLS devonvSeq
+foo@bar:~$ comparison/compare.py -rf  res/comp-stereoscope/*/W*tsv  res/deconvSeq-proportions.tsv res/comp-DWLS/proportions.tsv \
+ -tf data/comp/synthetic/proportions.hippo.tsv -o res/comp -mn stereoscope deconvseq DWLS
 
 ```
 Which will generate an image like the follwing :
 
-![alt text](imgs/stereoscope-deconvseq-DWLS-boxplot.png "Comparison of Methods")
+![alt text](imgs/Stereoscope-deconvseq-DWLS-boxplot.png "Comparison of Methods")
 
 The dashed line represents the mean of the average performance upon randomly sampling propotrions from a homogenous
-Dirichlet distribution (concentration 1), repeated 1000 times. The shaded blue region represent the 95% confidence
-interval, based on these 1000 values.
+Dirichlet distribution (concentration 1), repeated 1000 times. 
 
 <a id="bc-add"></a>
 ## Using pre-estimated parameters
