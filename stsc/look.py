@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 plt.rcParams.update({
     "figure.max_open_warning" : 200,
     "font.size" : 15,
-    "font.family": "serif",  # use serif/main font for text elements
+    "font.family": "calibri",  # use serif/main font for text elements
 })
 
 
@@ -36,6 +36,23 @@ warnings.simplefilter('ignore', category=NumbaWarning)
 from stsc.utils import make_joint_matrix, split_joint_matrix
 
 #%% Funtions -------------------------------
+
+def spltstr(string,size = 20):
+    rxseps = [' ','-','\\.','_']
+    if len(string) > size:
+        match = re.search('|'.join(rxseps),
+                          string[size::])
+        if match:
+            pos = size + match.start() 
+            strout = spltstr(string[0:pos]) + \
+                '\n' + \
+                spltstr(string[pos+1::])
+            return strout
+        else:
+            return string 
+    else:
+        return string
+
 
 def pd2np(func):
     """Pandas to Numpy wrapper
@@ -97,10 +114,11 @@ def ax_prop(ta1,
             y,
             pp,
             ms = 80,
-            ec = 'black',
+            ec = "black",
             cm = plt.cm.Blues,
             mx = [35,35],
             mn = [0,0],
+            alpha = 1,
             vmin = 0,
             vmax = 1):
 
@@ -116,6 +134,7 @@ def ax_prop(ta1,
                 cmap = cm,
                 edgecolors = ec,
                 s = ms,
+                alpha = alpha,
                 vmin = vmin,
                 vmax = vmax,
                 )
@@ -315,7 +334,7 @@ def look(args,):
         titles = snames
         outer = n_celltypes
         inner = n_sections
-        fignames = [osp.join(odirs[0],''.join([celltypes[x],'.svg']))\
+        fignames = [osp.join(odirs[0],''.join([celltypes[x],'.png']))\
                     for x in range(n_celltypes)]
 
         suptitles = celltypes
@@ -325,7 +344,7 @@ def look(args,):
         titles = celltypes
         outer = n_sections
         inner = n_celltypes
-        fignames = [osp.join(odirs[x],''.join([snames[x],'.svg'])) \
+        fignames = [osp.join(odirs[x],''.join([snames[x],'.png'])) \
                     for x in range(n_sections)]
         suptitles = snames
 
@@ -355,6 +374,12 @@ def look(args,):
             vmax = (np.quantile(wlist[section_id].iloc[:,celltype_id],1-alpha) if \
                     args.scale_by == 'i' else np.quantile(wlist[section_id].values,1-alpha))
 
+            if args.alpha is not None:
+                if args.alpha_vector:
+                    alpha_vec =  wlist[section_id].iloc[:,celltype_id] * args.alpha
+                else:
+                    alpha_vec = args.alpha * np.ones(crdlist[section_id].shape[0])
+
             ax_prop(ax[inside],
                     crdlist[section_id][:,0],
                     crdlist[section_id][:,1],
@@ -362,11 +387,13 @@ def look(args,):
                     mn = mncrd[section_id],
                     mx = mxcrd[section_id],
                     ms = args.marker_size,
+                    ec = args.edgecolor,
+                    alpha = args.alpha,
                     vmin = vmin,
                     vmax = vmax,
                     )
 
-            ax[inside].set_title(titles[inside])
+            ax[inside].set_title(spltstr(titles[inside]))
 
             if args.flip_y: ax[inside].invert_yaxis()
 
@@ -406,7 +433,7 @@ def look(args,):
 
         if not args.gathered_compr or len(args.proportions_path) < 2:
             for s in range(n_sections):
-                figpth = osp.join(odirs[s],'.'.join([snames[s],'compressed.png']))
+                figpth = osp.join(odirs[s],'.'.join([snames[s],'compressed.' + args.image_type]))
                 if not osp.isdir(odirs[s]): os.mkdir(odirs[s])
                 figsize = (10,10)
                 fig,ax = plt.subplots(1,1,figsize = figsize)
@@ -421,7 +448,7 @@ def look(args,):
         else:
             n_cmpr_cols = args.n_cols
             n_cmpr_rows = np.ceil(n_sections / n_cmpr_cols).astype(int)
-            figpth = osp.join(odirs[0],'joint.compressed.png')
+            figpth = osp.join(odirs[0],'joint.compressed.' + args.image_type)
             if not osp.exists(odirs[0]): os.mkdir(odirs[0])
 
             figsize = ((n_cmpr_cols + 1) * 3.2, (n_cmpr_rows +1) * 3.2 + 1.0)
@@ -440,7 +467,7 @@ def look(args,):
                               scmpr[s],
                               hexagonal=args.hexagonal)
 
-                ax[r,c].set_title(snames[s],
+                ax[r,c].set_title(spltstr(snames[s]),
                                   fontsize = 10)
 
                 if args.flip_y: ax[r,c].invert_yaxis()
