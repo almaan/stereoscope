@@ -574,3 +574,9 @@ We do not have a good reference like the Allen Brain Atlas to assess the quality
 ambition of presenting these as new findings in a biological context. Rather, this is to be considered as partly a
 demonstration of how to use Stereoscope in different settings, but also how data sets from different tissues can be
 combined if one desires.
+
+
+## TODO's
+
+* Implement .h5 support
+* Improve conda compatibility
