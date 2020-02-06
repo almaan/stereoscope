@@ -291,7 +291,7 @@ def make_sc_dataset(cnt_pth : str,
 
         gene_list = pd.Index([ x.replace('\n','') for x in gene_list ])
         sel = cnt.columns.intersection(gene_list)
-        cnt = cnt.iloc[:,sel]
+        cnt = cnt.loc[:,sel]
 
     # create sc data set
     dataset = CountData(cnt = cnt,
