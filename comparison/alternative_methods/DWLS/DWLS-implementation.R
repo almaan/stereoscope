@@ -1,7 +1,33 @@
 #!/usr/bin/Rscript
 
+pkg.list <- installed.packages()[,"Package"] 
+
+if (!("argparse") %in% pkg.list) {
+    install.packages("argparse")
+}
+if (!("zeallot") %in% pkg.list) {
+    install.packages("zeallot")
+}
+
+# taken from:
+# https://stackoverflow.com/questions/47044068/get-the-path-of-current-scriptk
+getCurrentFileLocation <-  function()
+{
+    this_file <- commandArgs() %>% 
+    tibble::enframe(name = NULL) %>%
+    tidyr::separate(col=value, into=c("key", "value"), sep="=", fill='right') %>%
+    dplyr::filter(key == "--file") %>%
+    dplyr::pull(value)
+    if (length(this_file)==0)
+    {
+      this_file <- rstudioapi::getSourceEditorContext()$path
+    }
+    return(dirname(this_file))
+}
+
 library(zeallot)
 library(argparse)
+library(tidyverse)
 
 parser <- ArgumentParser()
 
@@ -38,10 +64,11 @@ st_cnt_pth <- args$st_data
 
 
 
-
 dir.create(file.path(workdir,"results"), showWarnings = F)
 
-source("Modded_Deconvolution_functions.R")
+script.dir <- getCurrentFileLocation()
+
+source(file.path(script.dir,"Modded_Deconvolution_functions.R"))
 print("Loading SC count data")
 dataSC <-  read.table(sc_cnt_pth,
                       sep = '\t',
@@ -50,7 +77,6 @@ dataSC <-  read.table(sc_cnt_pth,
                       stringsAsFactors = F
                       )
 
-setwd(workdir)
 
 print(dataSC[1:10,1:10])
 print("Loading ST count data")
@@ -72,6 +98,8 @@ labels <- read.table(sc_mta_pth,
                      )
 labels <- labels['bio_celltype']
 print(labels[1:10,])
+print(workdir)
+setwd(workdir)
 print("Prepare Data for analysis")
 intermeta <- intersect(rownames(dataSC),rownames(labels))
 dataSC <- dataSC[intermeta,]
@@ -79,7 +107,6 @@ labels <- labels[intermeta,]
 old_labels <- labels
 labels <- gsub(',| |\\.|-','_',labels, perl = T)
 types <- unique(labels)
-print(types)
 n_types <- length(types)
 
 interst <- intersect(colnames(dataSC),colnames(dataST))
@@ -88,7 +115,7 @@ dataST <- dataST[,interst]
 
 dataSC <- t(dataSC) # transposition converts to matrix
 labels <- as.vector(unlist(labels))
-
+set.seed(1337)
 Signatures <- buildSignatureMatrixMAST(scdata=dataSC,
                                        id=labels,
                                        path="results",
@@ -119,16 +146,14 @@ for (s in 1:n_spots) {
 
     tr$sig <- tr$sig[,colSums(tr$sig) > 0]
     is_pd <- eigen(t(tr$sig)%*%tr$sig)$values
-    print(is_pd)
-    is_pd <- all(is_pd > 10e-8)
+    is_pd <- all(is_pd > 10e-6)
 
     if (!(is_pd)) { 
         next
     }
-
-    solDWLS <- solveDampenedWLS(tr$sig,tr$bulk)
+    
+    try(solDWLS <- solveDampenedWLS(tr$sig,tr$bulk),next)
     print("Proportions >> ")
-    print(solDWLS)
     prop_mat[s,names(solDWLS)] <- solDWLS
 }
 

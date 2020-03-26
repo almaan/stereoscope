@@ -147,8 +147,6 @@ res = getx1.rnaseq(NB0=200,
                    b0.sc,
                    dge.st)
 
-print(colnames(res$x1))
-print(ori_lnames)
 colnames(res$x1) <- ori_lnames
 save(res,file = file.path(args$out_dir,"results.R"))
 

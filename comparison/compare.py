@@ -4,6 +4,10 @@ import os
 import os.path as osp
 import argparse as arp
 from typing import List,Dict,NoReturn,Callable,Tuple
+import rpy2.robjects as robjects
+from rpy2.robjects.packages import importr
+from rpy2.robjects import r, pandas2ri
+
 
 import numpy as np
 import pandas as pd
@@ -18,6 +22,60 @@ plt.rcParams.update({
         "font.family": "calibri",
         "font.size": 15,
 })
+
+
+def r_wilcox(x : np.ndarray,
+             y : np.ndarray) ->  pd.DataFrame:
+    """r_wilcox
+
+    Conducts a paired one sided Wilcoxon
+    signed rank test, assessing
+    whether the samples in x
+    in general are smaller than those
+    from in y.
+
+    Note, this function uses rbindings
+    to access the slightly more
+    sophisticated R implementation of 
+    the test.
+
+    Parameters
+    ----------
+    x : np.ndarray 
+        vector of samples from population that is assumed to
+        have smaller values
+    y : np.ndarray 
+        vector of samples from population that is assumed to
+        have larger values
+
+    Returns
+    -------
+    DataFrame with the results from
+    the wilcoxon test.
+
+    """
+
+    pandas2ri.activate()
+
+    asdf = robjects.r("as.data.frame")
+    asnum = robjects.r("as.numeric")
+    r_true = robjects.r("TRUE")
+
+    a = pd.DataFrame(x)
+    b = pd.DataFrame(y)
+    r_a = robjects.conversion.py2rpy(a)
+    r_a = asdf(r_a)
+    r_b = robjects.conversion.py2rpy(b)
+    r_b = asdf(r_b)
+    wilcoxon = robjects.r("wilcox.test")
+    args = {"y":r_b.X0,"conf.int":r_true,"alternative":"less","paired":r_true}
+    pred = wilcoxon(r_a.X0,**args)
+    res = dict()
+    names = ['statistic','p.value','alternative','conf.int','estimate']
+    for name in names:
+        res.update({name:pred.rx2(name)})
+
+    return res
 
 def _get_method_name(pth : str,
                     ):
@@ -352,9 +410,14 @@ def test_diff(data : pd.DataFrame,
     # get all colnames except reference column
     non_ref = list(filter(lambda x: x != ref_col, data.columns))
     # prepare DataFrame
-    rdf = np.zeros((len(non_ref),2))
+    columns = pd.Index(['W',
+                        'estimate',
+                        'p_value',
+                        'CI_upper',
+                        ])
+    rdf = np.zeros((len(non_ref),len(columns)))
     rdf = pd.DataFrame(rdf,
-                       columns = ['Mean Difference','p-value'],
+                       columns = columns ,
                        index = non_ref,
                       )
 
@@ -362,17 +425,14 @@ def test_diff(data : pd.DataFrame,
     for k,col in enumerate(non_ref):
 
         # compute difference between reference and
-        # selected method
-        diff = data.loc[:,ref_col].values - data.loc[:,col].values
-        # get mean difference
-        mn = (diff).mean()
-        # compute w-statistic and p-value
-        stat,pval = st.wilcoxon(x = diff,
-                                alternative = 'less',
-                               )
+        diff_x = data.loc[:,ref_col].values 
+        diff_y = data.loc[:,col].values
+        stat = r_wilcox(diff_x,diff_y)
 
-        rdf.loc[col,'Mean Difference'] = mn
-        rdf.loc[col,'p-value'] = pval
+        rdf.loc[col,'W'] = stat['statistic']
+        rdf.loc[col,"CI_upper"] = stat['conf.int'][1]
+        rdf.loc[col,'p_value'] = stat['p.value']
+        rdf.loc[col,'estimate'] = stat['estimate']
 
     print(rdf)
 
