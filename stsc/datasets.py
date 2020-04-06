@@ -220,6 +220,7 @@ def make_sc_dataset(cnt_pth : str,
                     lbl_colname : str = 'bio_celltype',
                     min_counts : int = 300,
                     min_cells : int = 0,
+                    transpose : bool = False,
                     ):
 
     """
@@ -254,6 +255,9 @@ def make_sc_dataset(cnt_pth : str,
         of a gene among all cells
         for it to be included
 
+    transpose : bool
+        transpose data
+
     Returns:
     -------
 
@@ -262,6 +266,8 @@ def make_sc_dataset(cnt_pth : str,
     """
 
     cnt = utils.read_file(cnt_pth)
+    if transpose:
+        cnt = cnt.T
     lbl = utils.read_file(lbl_pth)
 
     # match count and label data
@@ -315,6 +321,7 @@ def make_st_dataset(cnt_pths : List[str],
                     min_counts : int = 0,
                     min_spots : int = 0,
                     filter_genes : bool = False,
+                    transpose : bool = False,
                     )-> CountData :
 
     """
@@ -344,6 +351,9 @@ def make_st_dataset(cnt_pths : List[str],
         exclude MALAT1 and RP genes from
         analysis
 
+    transpose : bool
+        transpose data
+
 
     Returns:
     -------
@@ -353,7 +363,7 @@ def make_st_dataset(cnt_pths : List[str],
     """
 
     # create joint matrix for count data
-    cnt = utils.make_joint_matrix(cnt_pths)
+    cnt = utils.make_joint_matrix(cnt_pths,transpose)
 
     # select top N genes if specified
     if topn_genes is not None:

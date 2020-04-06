@@ -104,6 +104,7 @@ def run(prs : arp.ArgumentParser,
                                     filter_genes = args.filter_genes,
                                     min_counts = args.min_sc_counts,
                                     min_cells = args.min_cells,
+                                    transpose = args.sc_transpose,
                                     )
 
         log.info(' '.join(["SC data GENES : {} ".format(sc_data.G),
@@ -177,6 +178,7 @@ def run(prs : arp.ArgumentParser,
                                      min_counts = args.min_st_counts,
                                      min_spots = args.min_spots,
                                      filter_genes = args.filter_genes,
+                                     transpose = args.st_transpose,
                                     )
 
         log.info(' '.join(["ST data GENES : {} ".format(st_data.G),
@@ -204,6 +206,7 @@ def run(prs : arp.ArgumentParser,
                                  silent_mode = args.silent_mode,
                                  st_from_model = args.st_model,
                                  device = device,
+                                 keep_noise = args.keep_noise,
                                  )
 
         W,st_model = st_res['proportions'],st_res['model']
@@ -227,4 +230,3 @@ def run(prs : arp.ArgumentParser,
             log.info("saving proportions for section {} to {}".format(sectiontag[s],
                                                                       oname_W))
             utils.write_file(wlist[s],oname_W)
-

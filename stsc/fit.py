@@ -129,6 +129,7 @@ def fit_st_data(st_data : D.CountData,
                 st_batch_size : int,
                 silent_mode : bool = False,
                 st_from_model : str = None,
+                keep_noise : bool = False,
                 **kwargs)->Dict[str,Union[pd.DataFrame,M.STModel]]:
     """Fit ST Data model
 
@@ -157,9 +158,11 @@ def fit_st_data(st_data : D.CountData,
         batching will occur
     silent_mode : bool
         run in silent mode. Default False.
-    st_from_model : str,
+    st_from_model : str
         path to pre-fitted st-model state dict.
         Should be a '.pt' object
+    keep_noise : bool
+        keep dummy cell type in output
 
     Returns:
     -------
@@ -205,13 +208,17 @@ def fit_st_data(st_data : D.CountData,
     # get estimated unadjusted proportions
     W  = st_model.v.data.cpu().numpy().T
     # remove dummy cell type proportion values
-    W = W[:,0:st_model.K]
+    if not keep_noise:
+        W = W[:,0:st_model.K]
+        w_columns = R.columns
+    else:
+        w_columns = R.columns.append(["noise"])
     # normalize to obtain adjusted proportions
     W = W / W.sum(axis = 1).reshape(-1,1)
     # generate pandas DataFrame from proportions
     W = pd.DataFrame(W,
                      index = st_data.index,
-                     columns = R.columns)
+                     columns = w_columns)
 
 
     return {'proportions':W,

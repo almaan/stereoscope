@@ -397,8 +397,6 @@ def look(args,):
 
             if args.flip_y: ax[inside].invert_yaxis()
 
-
-
             hide_spines(ax[inner:ax.shape[0]])
 
         if not osp.exists(osp.dirname(fignames[outside])): os.mkdir(osp.dirname(fignames[outside]))

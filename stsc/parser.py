@@ -115,6 +115,26 @@ def make_parser():
                                 " data.",
                                 ]))
 
+    run_parser.add_argument('-stt','--st_transpose',
+                        required = False,
+                        default = False,
+                        action = 'store_true',
+                        help = "transpose spatial data")
+
+
+    run_parser.add_argument('-sct','--sc_transpose',
+                        required = False,
+                        default = False,
+                        action = 'store_true',
+                        help = "transpose sc data")
+
+    run_parser.add_argument('-kn','--keep_noise',
+                        required = False,
+                        default = False,
+                        action = 'store_true',
+                        help = "keep noise")
+
+
     run_parser.add_argument('-o','--out_dir',
                         required = False,
                         default = '',
@@ -313,6 +333,33 @@ def make_parser():
                         action = 'store_true',
                         help = ''.join([]),
                         )
+
+    look_parser.add_argument("-ec","--edgecolor",
+                             required =False,
+                             type = str,
+                             default = 'black',
+                             help = "spot edgecolor",
+                            )
+
+    look_parser.add_argument("-ext","--image_type",
+                             required =False,
+                             type = str,
+                             default = 'png',
+                             help = "image file type",
+                            )
+
+    look_parser.add_argument("-al","--alpha",
+                             required =False,
+                             type = float,
+                             default = 1,
+                             help = "facecolor alpha",
+                            )
+    look_parser.add_argument("-av","--alpha_vector",
+                             required =False,
+                             default = False,
+                             action = 'store_true',
+                             help = "use value based alpha",
+                            )
 
     look_parser.add_argument("-shu","--shuffle_rgb",
                         required = False,

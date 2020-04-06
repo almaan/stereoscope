@@ -23,6 +23,7 @@ def generate_identifier():
 
 
 def make_joint_matrix(pths : List[str],
+                      transpose : bool = False,
                      )->pd.DataFrame:
     """Generate joint count matrix
 
@@ -35,6 +36,8 @@ def make_joint_matrix(pths : List[str],
     ---------
     pths : List[str]
         paths to matrix files
+    transpose : bool
+        transpose data
 
     Returns:
     -------
@@ -57,6 +60,8 @@ def make_joint_matrix(pths : List[str],
     for k,pth in enumerate(pths):
         # read file
         cnt = read_file(pth)
+        if transpose:
+            cnt = cnt.T
         mlist.append(cnt)
         # add file identifier k&- to rownames
         index = index.append(pd.Index([str(k) + '&-' + x for \
