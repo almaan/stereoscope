@@ -300,7 +300,7 @@ def look(args,):
 
 
     basenames = [get_id(x) for x in proppaths]
-    snames = [osp.basename(osp.dirname(pp)) for pp in proppaths]
+    snames = [osp.basename(osp.dirname(osp.abspath(pp))) for pp in proppaths]
 
     sortsynonyms = dict(section = 'section',
                         s = 'section',
