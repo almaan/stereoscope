@@ -185,46 +185,45 @@ def compress(x,method = 'pca'):
 
 
 @pd2np
-def ax_compressed(ta3,x,y,v,hexagonal=False):
-
-    xx = x.round(0).astype(int)
-    yy = y.round(0).astype(int)
-
-    minX, minY = xx.min(), yy.min()
-    xx = xx - minX
-    yy = yy - minY
-    maxX, maxY = np.max(xx),np.max(yy)
+def ax_compressed(ta3,
+                  x,
+                  y,
+                  v,
+                  hexagonal=False,
+                  marker_size =10):
 
     if not hexagonal:
+        xx = x.round(0).astype(int)
+        yy = y.round(0).astype(int)
+
+        minX, minY = xx.min(), yy.min()
+        xx = xx - minX
+        yy = yy - minY
+        maxX, maxY = np.max(xx),np.max(yy)
+
         z = np.ones((maxX + 2 ,maxY + 2,3))
 
         for ii in range(xx.shape[0]):
             z[xx[ii]+1,yy[ii]+1] = v[ii,:]
+
+        ta3.imshow(np.transpose(z,axes=(1,0,2)),
+                interpolation = 'nearest',
+                origin = 'lower',
+                aspect = 'equal')
+
+        ta3.grid(False)
+
+
     else :
-        ncrd = np.hstack((yy.reshape(-1,1),
-                          xx.reshape(-1,1)))
-        z = crd2array(v,
-                      ncrd,
-                      maxX+2,
-                      maxY+2,
-                      fill = 1.0)
+        ta3.scatter(x,
+                    y,
+                    c = v,
+                    s = marker_size,
+                    edgecolor = "none",
+                    )
 
-        mask = np.ones(z.shape)
-        mask[xx,yy] = 0
-        mask[xx+1,yy] = 0
-        mask = mask.astype(bool)
 
-        z[z < 0.0] = 0.0
-        z[z > 1.0] = 1.0
 
-        z[mask] = 1.0
-
-    ta3.imshow(np.transpose(z,axes=(1,0,2)),
-               interpolation = 'nearest',
-               origin = 'lower',
-               aspect = 'equal')
-
-    ta3.grid(False)
     ta3.set_xticks([])
     ta3.set_yticks([])
 
@@ -288,6 +287,11 @@ def crd2array(rgb,crd,w,h,fill= np.nan):
 def look(args,):
     get_id = lambda x: '.'.join(osp.basename(x).split('.')[0:-1])
     tag = "stsc_viz"
+
+    try:
+        cmap = eval("plt.cm." + args.colormap)
+    except:
+        cmap = plt.cm.Blues
 
     proppaths = args.proportions_path
     if not isinstance(proppaths,list):
@@ -353,7 +357,7 @@ def look(args,):
     mxcrd =  [np.max(x,axis = 0) for x in crdlist]
     mncrd =  [np.min(x,axis = 0) for x in crdlist]
 
-    figsize = ((n_cols + 1) * 3.5, (n_rows +1 ) * 3.5 + 5)
+    figsize = ((n_cols + 1) * args.side_size, (n_rows +1 ) * args.side_size + 5)
 
     for outside in range(outer):
         fig,ax = plt.subplots(n_rows,n_cols,figsize = figsize,squeeze = False)
@@ -387,6 +391,7 @@ def look(args,):
                     mn = mncrd[section_id],
                     mx = mxcrd[section_id],
                     ms = args.marker_size,
+                    cm = cmap,
                     ec = args.edgecolor,
                     alpha = args.alpha,
                     vmin = vmin,
@@ -433,11 +438,13 @@ def look(args,):
             for s in range(n_sections):
                 figpth = osp.join(odirs[s],'.'.join([snames[s],'compressed.' + args.image_type]))
                 if not osp.isdir(odirs[s]): os.mkdir(odirs[s])
-                figsize = (10,10)
+                figsize = (args.side_size,args.side_size)
                 fig,ax = plt.subplots(1,1,figsize = figsize)
                 ax_compressed(ax,crdlist[s][:,0],crdlist[s][:,1],
                               scmpr[s],
-                              hexagonal = args.hexagonal)
+                              hexagonal = args.hexagonal,
+                              marker_size = args.marker_size,
+                              )
                 if args.flip_y: ax.invert_yaxis()
 
                 fig.tight_layout()
@@ -449,7 +456,7 @@ def look(args,):
             figpth = osp.join(odirs[0],'joint.compressed.' + args.image_type)
             if not osp.exists(odirs[0]): os.mkdir(odirs[0])
 
-            figsize = ((n_cmpr_cols + 1) * 3.2, (n_cmpr_rows +1) * 3.2 + 1.0)
+            figsize = ((n_cmpr_cols + 1) * args.side_size, (n_cmpr_rows +1) * args.side_size + 1.0)
 
             fig, ax = plt.subplots(n_cmpr_rows,n_cmpr_cols,
                                    figsize = figsize,
@@ -463,7 +470,9 @@ def look(args,):
                               crdlist[s][:,0],
                               crdlist[s][:,1],
                               scmpr[s],
-                              hexagonal=args.hexagonal)
+                              hexagonal=args.hexagonal,
+                              marker_size = args.marker_size,
+                              )
 
                 ax[r,c].set_title(spltstr(snames[s]),
                                   fontsize = 10)
