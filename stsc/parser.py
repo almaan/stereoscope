@@ -361,6 +361,23 @@ def make_parser():
                              help = "use value based alpha",
                             )
 
+    look_parser.add_argument("-cm","--colormap",
+                             required =False,
+                             default = "Blues",
+                             type = str,
+                             help = "name of matplotlib"\
+                             " colormap to use."
+                             ,
+                            )
+
+    look_parser.add_argument("-ss","--side_size",
+                             required =False,
+                             default = 350,
+                             type = float,
+                             help = "subplot side size",
+                            )
+
+
     look_parser.add_argument("-shu","--shuffle_rgb",
                         required = False,
                         default = False,

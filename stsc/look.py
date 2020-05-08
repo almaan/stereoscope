@@ -288,6 +288,8 @@ def look(args,):
     get_id = lambda x: '.'.join(osp.basename(x).split('.')[0:-1])
     tag = "stsc_viz"
 
+    args.side_size = args.side_size / 100
+
     try:
         cmap = eval("plt.cm." + args.colormap)
     except:
