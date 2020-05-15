@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 plt.rcParams.update({
     "figure.max_open_warning" : 200,
@@ -120,7 +121,9 @@ def ax_prop(ta1,
             mn = [0,0],
             alpha = 1,
             vmin = 0,
-            vmax = 1):
+            vmax = 1,
+            threshold = None,
+            ):
 
     ta1.set_aspect('equal')
     ta1.set_xticks([])
@@ -128,16 +131,37 @@ def ax_prop(ta1,
     ta1.set_xlim([mn[0]-1,mx[0] +1])
     ta1.set_ylim([mn[1]-1,mx[1]+1])
     ta1.autoscale(False)
-    ta1.scatter(x = x,
-                y = y,
-                c = pp,
-                cmap = cm,
-                edgecolors = ec,
-                s = ms,
-                alpha = alpha,
-                vmin = vmin,
-                vmax = vmax,
-                )
+
+    plot_prop =  dict(edgecolors = ec,
+                      s = ms,
+                      vmin = vmin,
+                      vmax = vmax,
+                      )
+
+    if threshold is not None:
+        sup_thrs = pp >= threshold
+        sub_thrs = pp < threshold
+    else:
+        sub_thrs = np.array([False])
+        sup_thrs = np.ones(x.shape[0],
+                           dtype = np.bool)
+
+    if sup_thrs.sum() > 0:
+        ta1.scatter(x = x[sup_thrs],
+                    y = y[sup_thrs],
+                    c = pp[sup_thrs],
+                    cmap = cm,
+                    alpha = alpha,
+                    **plot_prop,
+                    )
+    if sub_thrs.sum() > 0:
+        gc = np.zeros((sub_thrs.sum(),4))
+        gc[:,3] = pp[sub_thrs]
+        ta1.scatter(x = x[sub_thrs],
+                    y = y[sub_thrs],
+                    c = gc,
+                    **plot_prop,
+                    )
 
     for v in ta1.axes.spines.values():
                 v.set_edgecolor('none')
@@ -223,7 +247,6 @@ def ax_compressed(ta3,
                     )
 
 
-
     ta3.set_xticks([])
     ta3.set_yticks([])
 
@@ -231,6 +254,50 @@ def ax_compressed(ta3,
         v.set_edgecolor('none')
 
     return ta3
+
+def ax_hard(fig,
+            ax,
+            x,
+            y,
+            pp,
+            marker_size = 10,
+            ):
+
+    n_types = pp.shape[1]
+    if n_types <= plt.cm.Dark2.N:
+        cmap = plt.cm.Dark2
+    elif n_types <= plt.cm.tab20.N:
+        cmap = plt.cm.tab20
+    else:
+        cmap = plt.cm.rainbow
+
+    max_type = np.argmax(pp.values,axis=1)
+    color = cmap(max_type /n_types )
+
+    ax[0].scatter(x,
+               y,
+               c = color,
+               s = marker_size,
+               )
+
+    for ii in range(2):
+        ax[ii].set_aspect("equal")
+        ax[ii].set_xticks([])
+        ax[ii].set_yticks([])
+
+        for v in ax[ii].axes.spines.values():
+            v.set_edgecolor('none')
+
+    patches = list()
+    for c in range(n_types):
+        patches.append(mpatches.Patch(color=cmap(c/n_types),
+                                      label=pp.columns.values[c])
+                       )
+
+    ax[1].legend(handles=patches)
+
+    return fig,ax 
+
 
 @pd2np
 def rgb_transform(y):
@@ -253,9 +320,12 @@ def read_file(pth):
     return f
 
 
-def get_crd(w):
+def get_crd(w,as_he = False):
     crd = [x.replace('X','').split('x') for x in w.index.values]
     crd = np.array(crd).astype(float)
+    if as_he:
+        crd = crd[:,[1,0]]
+        crd[:,1] = crd[:,1].max() - crd[:,1] + crd[:,1].min()
     return crd
 
 def resize_by_factor(w,h,f):
@@ -325,7 +395,7 @@ def look(args,):
 
     wlist = split_joint_matrix(allwmat)
 
-    crdlist = [get_crd(w) for w in wlist]
+    crdlist = [get_crd(w,as_he = args.image_orientation) for w in wlist]
 
     celltypes = allwmat.columns.tolist()
     n_sections = len(proppaths)
@@ -353,8 +423,6 @@ def look(args,):
         fignames = [osp.join(odirs[x],''.join([snames[x],'.png'])) \
                     for x in range(n_sections)]
         suptitles = snames
-
-
 
     mxcrd =  [np.max(x,axis = 0) for x in crdlist]
     mncrd =  [np.min(x,axis = 0) for x in crdlist]
@@ -398,6 +466,7 @@ def look(args,):
                     alpha = args.alpha,
                     vmin = vmin,
                     vmax = vmax,
+                    threshold = args.threshold,
                     )
 
             ax[inside].set_title(spltstr(titles[inside]))
@@ -406,8 +475,37 @@ def look(args,):
 
             hide_spines(ax[inner:ax.shape[0]])
 
-        if not osp.exists(osp.dirname(fignames[outside])): os.mkdir(osp.dirname(fignames[outside]))
+        if not osp.exists(osp.dirname(fignames[outside])):
+            os.mkdir(osp.dirname(fignames[outside]))
         fig.savefig(fignames[outside])
+
+    if args.hard_type:
+        for s in range(n_sections):
+            figpth = osp.join(odirs[s],
+                            '.'.join([snames[s],
+                                      'hard-type.' +\
+                                      args.image_type]))
+
+            if not osp.isdir(odirs[s]): os.mkdir(odirs[s])
+
+            figsize = (args.side_size * 2,args.side_size)
+            fig,ax = plt.subplots(1,2,figsize = figsize)
+
+            try:
+                fig,ax = ax_hard(fig,
+                                ax,
+                                crdlist[s][:,0],
+                                crdlist[s][:,1],
+                                wlist[s],
+                                marker_size = args.marker_size,
+                                )
+
+                if args.flip_y:
+                        ax.invert_yaxis()
+
+                fig.savefig(figpth)
+            except UserWarning:
+                print("Increase side (-ss SIDE_SIZE) size to fit legend")
 
     if args.compress_method is not None:
 
@@ -436,10 +534,16 @@ def look(args,):
         ct_cols = n_cols
         ct_skip = 1
 
-        if not args.gathered_compr or len(args.proportions_path) < 2:
+        if not args.gathered_compr or\
+           len(args.proportions_path) < 2:
             for s in range(n_sections):
-                figpth = osp.join(odirs[s],'.'.join([snames[s],'compressed.' + args.image_type]))
+                figpth = osp.join(odirs[s],
+                                  '.'.join([snames[s],
+                                            'compressed.' +\
+                                            args.image_type]))
+
                 if not osp.isdir(odirs[s]): os.mkdir(odirs[s])
+
                 figsize = (args.side_size,args.side_size)
                 fig,ax = plt.subplots(1,1,figsize = figsize)
                 ax_compressed(ax,crdlist[s][:,0],crdlist[s][:,1],

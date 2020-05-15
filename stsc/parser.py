@@ -370,6 +370,30 @@ def make_parser():
                              ,
                             )
 
+    look_parser.add_argument("-thr","--threshold",
+                             required =False,
+                             default = None,
+                             type = float,
+                             help = "threshold value for"\
+                             "proportion visualization",
+                            )
+
+    look_parser.add_argument("-ht","--hard_type",
+                             required =False,
+                             default = False,
+                             action = "store_true",
+                             help = "make hard type plot",
+                            )
+
+    look_parser.add_argument("-io","--image_orientation",
+                             required =False,
+                             default = False,
+                             action = "store_true",
+                             help = "arrange capture locations"\
+                             " in same orientation as HE image",
+                            )
+
+
     look_parser.add_argument("-ss","--side_size",
                              required =False,
                              default = 350,
