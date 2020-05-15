@@ -589,5 +589,8 @@ combined if one desires.
 * Add cell type priors based on single cell data
 * implement subsampling as module
 
+## Special Thanks
+* [cartal](https://github.com/cartal9) - for identifying small bugs in the `look` module and providing suggestions for additional features to enhance visualization.
+
 
 
