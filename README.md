@@ -591,6 +591,7 @@ combined if one desires.
 
 ## Special Thanks
 * [cartal](https://github.com/cartal9) - for identifying small bugs in the `look` module and providing suggestions for additional features to enhance visualization.
+* [nik1sto](https://github.com/nik1sto) - catching a dependency bug!
 
 
 
