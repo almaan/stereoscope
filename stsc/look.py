@@ -29,7 +29,7 @@ import PIL.Image as Image
 
 
 import umap
-from numba.errors import NumbaDeprecationWarning, NumbaWarning
+from numba.core.errors import NumbaDeprecationWarning, NumbaWarning
 
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
 warnings.simplefilter('ignore', category=NumbaWarning)
@@ -44,13 +44,13 @@ def spltstr(string,size = 20):
         match = re.search('|'.join(rxseps),
                           string[size::])
         if match:
-            pos = size + match.start() 
+            pos = size + match.start()
             strout = spltstr(string[0:pos]) + \
                 '\n' + \
                 spltstr(string[pos+1::])
             return strout
         else:
-            return string 
+            return string
     else:
         return string
 
@@ -296,7 +296,7 @@ def ax_hard(fig,
 
     ax[1].legend(handles=patches)
 
-    return fig,ax 
+    return fig,ax
 
 
 @pd2np
@@ -440,7 +440,7 @@ def look(args,):
             section_id = (inside if sort_by == 'ct' else outside )
             celltype_id = (outside if sort_by == 'ct' else inside)
 
-            alpha = 0.01
+            alpha = 0.00
 
             vmin = (np.quantile(wlist[section_id].iloc[:,celltype_id],alpha) if \
                     args.scale_by == 'i' else np.quantile(wlist[section_id].values,alpha))
