@@ -64,7 +64,7 @@ def make_joint_matrix(pths : List[str],
             cnt = cnt.T
         mlist.append(cnt)
         # add file identifier k&- to rownames
-        index = index.append(pd.Index([str(k) + '&-' + x for \
+        index = index.append(pd.Index([str(k) + '&-' + str(x) for \
                                        x in cnt.index ] ))
 
         # get union of all observed genes
