@@ -109,12 +109,12 @@ else:
     add_filter = np.ones(ds.ca[label].shape[0]).astype(np.bool)
 
 
-uni_types = np.unique(ds.ca[label])
+uni_types = np.unique(ds.ca[label].flatten())
 
 use_cells = []
 
 for type in uni_types:
-    zidx = np.where((ds.ca[label] == type) & add_filter)[0]
+    zidx = np.where((ds.ca[label].flatten() == type) & add_filter)[0]
     nz = zidx.shape[0]
 
     if nz < lower_bound:
@@ -137,7 +137,7 @@ use_cells = np.sort(use_cells)
 
 
 new_cnt = ds[:,use_cells].T
-new_lbl = ds.ca[label][use_cells]
+new_lbl = ds.ca[label].flatten()[use_cells]
 new_barcodes = ds.ca['CellID'][use_cells]
 _, idx = np.unique(new_barcodes,return_index = True)
 new_cnt = new_cnt[idx,:]

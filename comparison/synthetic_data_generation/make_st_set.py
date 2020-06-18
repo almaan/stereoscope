@@ -3,7 +3,7 @@
 import os
 import os.path as osp
 import argparse as arp
-from typing import Dict,Callable
+from typing import Dict,Callable,List
 
 import pandas as pd
 import numpy as np
@@ -14,6 +14,7 @@ def _assemble_spot(cnt : np.ndarray,
                   labels : np.ndarray,
                   alpha : float = 1.0,
                   fraction : float = 0.1,
+                  bounds : List[int] = [10,30],
                   )->Dict[str,t.Tensor]:
 
     """Assemble single spot
@@ -45,8 +46,8 @@ def _assemble_spot(cnt : np.ndarray,
 
     # sample between 10 to 30 cells to be present
     # at spot
-    n_cells = dists.uniform.Uniform(low = 10,
-                                    high = 30).sample().round().type(t.int)
+    n_cells = dists.uniform.Uniform(low = bounds[0],
+                                    high = bounds[1]).sample().round().type(t.int)
 
     # get unique labels found in single cell data
     uni_labs, uni_counts = np.unique(labels,
@@ -107,6 +108,7 @@ def assemble_data_set(cnt : pd.DataFrame,
                       labels : pd.DataFrame,
                       n_spots : int,
                       n_genes : int,
+                      n_cell_range : List[int],
                       assemble_fun : Callable = _assemble_spot,
                      )-> Dict[str,pd.DataFrame]:
 
@@ -123,7 +125,7 @@ def assemble_data_set(cnt : pd.DataFrame,
         single cell annotations
     n_spots : int
         number of spots to generate
-    n_gens : int
+    n_genes : int
         number of gens to include
     assemble_fun : Callable
         function to assemble single spot
@@ -155,6 +157,7 @@ def assemble_data_set(cnt : pd.DataFrame,
     for spot in range(n_spots):
         spot_data = assemble_fun(cnt.values,
                                  labels.values,
+                                 bounds = n_cell_range,
                                  )
 
         st_cnt[spot,:] = spot_data['expr']
@@ -225,6 +228,16 @@ def main():
                      help = 'output directory',
                     )
 
+    prs.add_argument('-ncr','--n_cell_range',
+                     nargs = 2,
+                     default = [10,30],
+                     type = int,
+                     help = 'lower bound (first argument)'\
+                     " and upper bound (second argument)"\
+                     " for the number of cells at each spot",
+                    )
+
+
     prs.add_argument('-t','--tag',
                      default = 'st_synth',
                      help = 'tag to mark data se with',
@@ -264,6 +277,7 @@ def main():
                                       sc_lbl,
                                       n_spots = n_spots,
                                       n_genes = n_genes,
+                                      n_cell_range = args.n_cell_range,
                                       assemble_fun = _assemble_spot,
                                       )
 

@@ -5,7 +5,7 @@ import os
 import sys
 
 setup(name='STereoSCope',
-            version='0.2',
+            version='0.3',
             description='Integration of ST and SC data',
             url='http://github.com/almaan/stereoscope',
             author='Alma Andersson',

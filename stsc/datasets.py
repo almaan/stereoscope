@@ -286,9 +286,14 @@ def make_sc_dataset(cnt_pth : str,
 
     # match count and label data
     inter = cnt.index.intersection(lbl.index)
-    print(inter)
+    if inter.shape[0] < 1:
+        print("[ERROR] : single cell count and annotation"\
+              " data did not match. Exiting."
+              file = sys.stderr,
+              )
     cnt = cnt.loc[inter,:]
     lbl = lbl.loc[inter,:]
+
 
 
     # select top N expressed genes

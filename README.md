@@ -162,23 +162,28 @@ st-hippo1.tsv
 st-hippo2.tsv
 
 ```
-#### 2.3 Data Fromatting
+#### 2.3 Data Formatting
 The output from the subsampling and the ST-data we provided you with are given in the correct formats,
-hence you will not have to do any additional work. However, we will briefly describe what type of files are required and
-how they should be formatted in order to run `stereoscope` : 
+hence you will not have to do any additional work. However, we will briefly describe what type of files are required and how they should be formatted in order to run `stereoscope` : 
 
-* **Single Cell Count Data File** - a `.tsv` file with cells as rows and genes as columns, each cell (row) should have a unique label
-* **Single Cell Annotation Data** - a `.tsv` file with the same rownames as the count data file, either with one single column
-  listing the annotations, or multiple columns where the column containing the labels should be named 'bio_celltype'
-* **Spatial Transcriptomics (ST) Count Data** - a tsv file containing with spots as rows and genes as columns
+* **Spatial Transcriptomics (ST) Count Data**
+  * Alt1 - a `.tsv` file with spots as rows and genes as columns
+  * Alt2 - a `.h5ad` file with capture locations as observations (rows) and genes as variables (columns)
+* **Single Cell Count Data File** 
+  * Alt1 - a `.tsv` file with cells as observations (rows) and genes as variables (columns), each cell (row) should have a unique label
+  * Alt2 - a `.h5ad` file with cells as rows and genes as columns. Cell type annotations can be read from this file as well, and should then be put in the `.obs` slot. See Alt2 below for more information.
+* **Single Cell Annotation Data**
+  * Alt1 - a `.tsv` file with the same rownames as the count data file, either with one single column
+  listing the annotations, or multiple columns where the column containing the labels should be named 'bio_celltype**.
+  * Alt2 - use labels from `.h5ad` file. Make sure your labels are located in the `.obs` slot and then use the flat `--label_colname KEY` to indicate what the key to access these labels is (i.e., `KEY`).
 
-_Note: We are planning to add support for `h5ad` files, but are awaiting a somewhat more standardized format for spatial data_
+**NOTE** : The `h5ad` support is still in beta. If you are experiencing any problems, we'd be tremendously happy if you'd let us know by posting an issue!
 
 Some additional things to keep in mind are:
-* Make sure that your ST and single cell data use the same gene identifiers. For example, having one set using _ENSEMBL_ ids while
-  the other one has _HGNC_ gene symbols will raise an error. However as long as the ids match, `stereoscope` is agnostic to the type of identifiers used.
+* Make sure that your ST and single cell data use the same gene identifiers. For example, if one set uses _ENSEMBL_ ids while the other one uses _HGNC_ gene symbols, this will raise an error. However as long as the ids match, `stereoscope` is agnostic to the type of identifiers used.
 * Do **not normalize** your data - the model relies on using raw count data, your gene counts should thus always be
   integer numbers.
+* When using `h5ad` files, the index values of the `var` and `obs` slots will be used as gene (`var.index`) and capture location (`obs.index`) identifiers.
 
 ## 3. Analysis
 
@@ -585,13 +590,12 @@ combined if one desires.
 
 ## TODO's
 
-* Implement `.h5ad` support
 * Add cell type priors based on single cell data
 * implement subsampling as module
 
 ## Special Thanks
 * [cartal](https://github.com/cartal9) - for identifying small bugs in the `look` module and providing suggestions for additional features to enhance visualization.
-* [nik1sto](https://github.com/nik1sto) - catching a dependency bug!
+* [nik1sto](https://github.com/nik1sto) - catching a dependency bug and a type conversion error.
 
 
 

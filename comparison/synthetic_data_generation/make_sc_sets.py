@@ -80,6 +80,8 @@ def main(sc_cnt_pth : str,
     idx_generation = []
     idx_validation = []
 
+    np.random.seed(1337)
+
     for z in range(n_types):
         tmp_idx = np.where(labels == uni_labs[z])[0]
         n_generation = int(round(tmp_idx.shape[0] / 2 ))
