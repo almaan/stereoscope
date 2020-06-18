@@ -138,8 +138,14 @@ class STModel(nn.Module):
         self.theta = Parameter(t.tensor(np.zeros((self.Z,self.S)).astype(np.float32)).to(device))
         nn.init.normal_(self.theta, mean = 0.0,std = 1.0)
         # gene bias in log space
-        self.beta = Parameter(t.tensor(np.zeros((self.G,1)).astype(np.float32)).to(device))
-        nn.init.normal_(self.beta, mean = 0.0, std = 0.1)
+        if not kwargs.get("freeze_beta",False):
+            self.beta = Parameter(t.tensor(np.zeros((self.G,1)).astype(np.float32)).to(device))
+            self.beta_trans = self.softpl
+            nn.init.normal_(self.beta, mean = 0.0, std = 0.1)
+        else:
+            print("Using static beta_g")
+            self.beta = t.tensor(np.ones((self.G,1)).astype(np.float32)).to(device)
+            self.beta_trans = lambda x : x
         # un-normalized proportions
         self.v = t.tensor(np.zeros((self.Z,self.S)).astype(np.float32)).to(device)
 
@@ -214,7 +220,7 @@ class STModel(nn.Module):
         # noise values
         self.eps = self.softpl(self.eta)
         # account for gene specific bias and add noise
-        self.Rhat = t.cat((t.mul(self.softpl(self.beta), self.R),self.eps),dim = 1)
+        self.Rhat = t.cat((t.mul(self.beta_trans(self.beta), self.R),self.eps),dim = 1)
         # combinde rates for all cell types
         self.r = t.einsum('gz,zs->gs',[self.Rhat,self.v[:,self.gidx]])
         # get loss for current parameters

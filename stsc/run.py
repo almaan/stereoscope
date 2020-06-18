@@ -84,8 +84,7 @@ def run(prs : arp.ArgumentParser,
                 )
 
         # control that paths to sc data exists
-        if not all([osp.exists(args.sc_cnt),
-                    osp.exists(args.sc_labels)]):
+        if not all([osp.exists(args.sc_cnt)]):
 
             log.error(' '.join(["One or more of the specified paths to",
                                 "the sc data does not exist"]))
@@ -207,6 +206,7 @@ def run(prs : arp.ArgumentParser,
                                  st_from_model = args.st_model,
                                  device = device,
                                  keep_noise = args.keep_noise,
+                                 freeze_beta = args.freeze_beta,
                                  )
 
         W,st_model = st_res['proportions'],st_res['model']

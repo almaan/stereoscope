@@ -174,8 +174,17 @@ def fit_st_data(st_data : D.CountData,
     # get intersection between ST data
     # and single cell parameters
     inter = st_data.intersect(R.index)
+
+    if inter.shape[0] < 1:
+        print("[ERROR] : No genes overlap in SC and"\
+              " ST data. Exiting.",
+              file = sys.stderr,
+              )
+        sys.exit(-1)
+
     R = R.loc[inter,:]
     logits = logits.loc[inter,:]
+
 
     t.manual_seed(1337)
     # generate ST model
@@ -183,6 +192,7 @@ def fit_st_data(st_data : D.CountData,
                          R = R.values,
                          logits = logits.values,
                          device = device,
+                         freeze_beta = kwargs.get("freeze_beta",False),
                          )
     # load st model from path if provided
     if st_from_model is not None:

@@ -265,21 +265,31 @@ def make_sc_dataset(cnt_pth : str,
 
     """
 
-    cnt = utils.read_file(cnt_pth)
-    if transpose:
-        cnt = cnt.T
-    lbl = utils.read_file(lbl_pth)
+    sc_ext = utils.get_extenstion(cnt_pth)
+
+    if sc_ext == 'h5ad' :
+        cnt,lbl = utils.read_h5ad_sc(cnt_pth,
+                                     lbl_colname,
+                                     lbl_pth,
+                                     )
+    else:
+        cnt = utils.read_file(cnt_pth,sc_ext)
+        if transpose:
+            cnt = cnt.T
+        lbl = utils.read_file(lbl_pth)
+
+        # get labels
+        if lbl_colname is None:
+            lbl = lbl.iloc[:,0]
+        else:
+            lbl = lbl.loc[:,lbl_colname]
 
     # match count and label data
     inter = cnt.index.intersection(lbl.index)
+    print(inter)
     cnt = cnt.loc[inter,:]
     lbl = lbl.loc[inter,:]
 
-    # get labels
-    if lbl_colname is None:
-        lbl = lbl.iloc[:,0]
-    else:
-        lbl = lbl.loc[:,lbl_colname]
 
     # select top N expressed genes
     if topn_genes is not None:
@@ -363,7 +373,14 @@ def make_st_dataset(cnt_pths : List[str],
     """
 
     # create joint matrix for count data
-    cnt = utils.make_joint_matrix(cnt_pths,transpose)
+
+    st_ext = utils.get_extenstion(cnt_pths[0])
+
+    if st_ext == "h5ad":
+        cnt = utils.read_h5ad_st(cnt_pths)
+    else:
+        cnt = utils.make_joint_matrix(cnt_pths,
+                                      transpose)
 
     # select top N genes if specified
     if topn_genes is not None:

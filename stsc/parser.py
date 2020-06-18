@@ -10,12 +10,15 @@ def make_parser():
 
     subparsers = parser.add_subparsers(dest = 'command')
     run_parser = subparsers.add_parser("run",
-                                       formatter_class=arp.ArgumentDefaultsHelpFormatter)
+                                       formatter_class=arp\
+                                       .ArgumentDefaultsHelpFormatter)
     look_parser = subparsers.add_parser("look",
-                                        formatter_class=arp.ArgumentDefaultsHelpFormatter)
+                                        formatter_class=arp\
+                                        .ArgumentDefaultsHelpFormatter)
     test_parser = subparsers.add_parser("test")
     progress_parser = subparsers.add_parser('progress',
-                                            formatter_class=arp.ArgumentDefaultsHelpFormatter)
+                                            formatter_class=arp\
+                                            .ArgumentDefaultsHelpFormatter)
 
 # Run Parser Arguments ---------------------------------------------
 
@@ -239,7 +242,12 @@ def make_parser():
                                         " to use",
                                         ]))
 
-
+    run_parser.add_argument('-fb','--freeze_beta',
+                        required = False,
+                        default = False,
+                        action = 'store_true',
+                        help = ''.join(["freeze beta params",
+                                        ]))
 
 # Look Parser Arguments -----------------------------------------------
 

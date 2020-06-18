@@ -344,7 +344,128 @@ class LossTracker:
         """current loss value"""
         return self.history[-1]
 
+
+def get_extenstion( pth : str) -> str:
+    """ get filetype extension"""
+    return osp.splitext(pth)[1][1::]
+
+
+
+def read_h5ad_sc(cnt_pth : str,
+                 lbl_colname : str = None,
+                 lbl_pth : str = None,
+                 )-> Tuple[pd.DataFrame,
+                           pd.DataFrame]:
+    
+    """read single cell data from h5ad
+
+    Parameters:
+    ----------
+    cnt_pth : str
+        paths to spatial data (h5ad)  files
+    lbl_colnames : str
+        key in obs that holds cell type labels 
+    lbl_pth : str
+        path to external files holding labels.
+        Only use when h5ad file do not contain
+        annotations data.
+
+    Returns:
+    -------
+    First element is a Pandas DataFrame that contains
+    all single cell data, second element is a Pandas
+    DataFrame holding the cell type labels.
+
+    """
+
+    import anndata as ad
+
+    _data = ad.read_h5ad(cnt_pth)
+
+    if lbl_colname is None:
+        lbl_colname = 0
+
+    if lbl_pth is None:
+        _lbl = _data.obs[[lbl_colname]]\
+                    .astype(str)
+    else:
+        _lbl = read_file(lbl_pth)
+        _lbl = _lbl[[lbl_colname]]
+
+    _data = pd.DataFrame(_data.X,
+                    index = _data.obs.index,
+                    columns = _data.var.index,
+                    )
+
+    _lbl.index = _data.index
+
+    return _data,_lbl
+
+def read_h5ad_st(cnt_pth : List[str],
+                 )-> pd.DataFrame:
+
+    """read spatial data from h5ad
+
+    Parameters:
+    ----------
+    cnt_pth : List[str]
+        paths to spatial data (h5ad) files
+
+    Returns:
+    -------
+    Pandas DataFrame of a joint matrix. Data points
+    from the same file will share the same
+    rowname prefix k, in the
+    joint matrix rowname given as:
+    "k&-[x-coordinate]x[y-coordinate]" if
+    coordinates are identified. Otherwise
+    the rownames are given as:
+    "k&-orignal-rowname"
+
+    """
+
+    import anndata as ad
+
+    _cnts = list()
+    for k,p in enumerate( cnt_pth ):
+        _data = ad.read_h5ad(p)
+
+        if "x" in _data.obs.keys():
+            new_idx = [str(k) + "&-" + str(x)+"x"+str(y) for\
+                        x,y in zip(_data.obs["x"].values,
+                                    _data.obs['y'].values,
+                                    )]
+
+        elif "spatial" in _data.obsm.keys():
+
+            new_idx = [str(k) + "&-" + str(x)+"x"+str(y) for\
+                        x,y in zip(_data.obsm["spatial"]["pxl_col_in_fullres"].values,
+                                    _data.obsm["spatial"]['pxl_row_in_fullres'].values,
+                                    )]
+        else:
+            new_idx = [str(k) + "&-" + str( x ) for\
+                        x in _data.obs.index ]
+
+        new_idx = pd.Index(new_idx)
+        _data = pd.DataFrame(_data.X,
+                        index = new_idx,
+                        columns = _data.var.index,
+                        )
+        _cnts.append(_data)
+
+    cnts = pd.concat(_cnts,
+                        join = "outer")
+
+    del _cnts,_data
+
+    cnts[pd.isna(cnts)] = 0.0
+    cnts = cnts.astype(float)
+
+    return cnts
+
+
 def read_file(file_name : str,
+              extension : str = None,
              )-> pd.DataFrame :
     """Read file
 
@@ -361,8 +482,11 @@ def read_file(file_name : str,
         DataFrame with content of file
 
     """
-    supported = ['tsv','gz']
-    extension = osp.splitext(file_name)[1][1::]
+
+    if extension is None:
+        extension = get_extenstion(file_name)
+
+    supported = ['tsv','gz',]
 
     if extension not in supported:
         print(' '.join([f"ERROR: File format {extension}",
