@@ -16,5 +16,6 @@ visual/make_latex_table.py
 visual/make_stats.py
 visual/make_transmat.py
 visual/propviz.py
-res/
+res/*/
+!res/.keep
 
