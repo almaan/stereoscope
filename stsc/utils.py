@@ -17,6 +17,10 @@ from torch.utils.data import DataLoader
 import stsc.datasets as D
 import stsc.models as M
 
+import anndata as ad
+import scipy.sparse as sparse
+
+
 def generate_identifier():
     """Generate unique date and time based identifier"""
     return re.sub(' |:','',str(datetime.datetime.today()))
@@ -349,7 +353,23 @@ def get_extenstion( pth : str) -> str:
     """ get filetype extension"""
     return osp.splitext(pth)[1][1::]
 
+def grab_anndata_counts(x : ad.AnnData,
+                        ) -> np.ndarray:
 
+    """Get dense count data from anndata"""
+
+    if isinstance(x.X,np.ndarray):
+        return x.X
+    elif isinstance(x.X,sparse.spmatrix):
+        return x.X.toarray()
+    elif isinstance(x.X, pd.DataFrame):
+        return x.X.values
+
+    else:
+        print("[ERROR] : unsupported"\
+              " data format : {}. Exiting.".format(type(x.X)),
+              )
+        sys.exit(-1)
 
 def read_h5ad_sc(cnt_pth : str,
                  lbl_colname : str = None,
@@ -378,8 +398,6 @@ def read_h5ad_sc(cnt_pth : str,
 
     """
 
-    import anndata as ad
-
     _data = ad.read_h5ad(cnt_pth)
 
     if lbl_colname is None:
@@ -392,10 +410,11 @@ def read_h5ad_sc(cnt_pth : str,
         _lbl = read_file(lbl_pth)
         _lbl = _lbl[[lbl_colname]]
 
-    _data = pd.DataFrame(_data.X,
-                    index = _data.obs.index,
-                    columns = _data.var.index,
-                    )
+
+    _data = pd.DataFrame(grab_anndata_counts(_data),
+                         index = _data.obs_names,
+                         columns = _data.var_names,
+                         )
 
     _lbl.index = _data.index
 
@@ -424,8 +443,6 @@ def read_h5ad_st(cnt_pth : List[str],
 
     """
 
-    import anndata as ad
-
     _cnts = list()
     for k,p in enumerate( cnt_pth ):
         _data = ad.read_h5ad(p)
@@ -444,12 +461,12 @@ def read_h5ad_st(cnt_pth : List[str],
                                     )]
         else:
             new_idx = [str(k) + "&-" + str( x ) for\
-                        x in _data.obs.index ]
+                        x in _data.obs_names ]
 
         new_idx = pd.Index(new_idx)
-        _data = pd.DataFrame(_data.X,
+        _data = pd.DataFrame(grab_anndata_counts(_data),
                         index = new_idx,
-                        columns = _data.var.index,
+                        columns = _data.var_names,
                         )
         _cnts.append(_data)
 

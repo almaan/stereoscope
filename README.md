@@ -242,7 +242,7 @@ using the same terminal window. Below is an example of what the progress-plot ma
 
 #### 4.1 Orienting the results
 
-Upon completeion of the analysis. The folder `res/hippo_1` folder should contain the following set of files:
+Upon completion of the analysis. The folder `res/hippo_1` folder should contain the following set of files:
 
 ```console
 foo@bar:~$ ls -1
@@ -595,7 +595,7 @@ combined if one desires.
 
 ## Special Thanks
 * [cartal](https://github.com/cartal9) - for identifying small bugs in the `look` module and providing suggestions for additional features to enhance visualization.
-* [nik1sto](https://github.com/nik1sto) - catching a dependency bug and a type conversion error.
+* [nik1sto](https://github.com/nik1sto) - catching several bugs and providing great feedback along with suggestions for features to improve.
 
 
 
