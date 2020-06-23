@@ -288,7 +288,7 @@ def make_sc_dataset(cnt_pth : str,
     inter = cnt.index.intersection(lbl.index)
     if inter.shape[0] < 1:
         print("[ERROR] : single cell count and annotation"\
-              " data did not match. Exiting."
+              " data did not match. Exiting.",
               file = sys.stderr,
               )
     cnt = cnt.loc[inter,:]
