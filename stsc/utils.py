@@ -375,7 +375,7 @@ def read_h5ad_sc(cnt_pth : str,
                  lbl_colname : str = None,
                  lbl_pth : str = None,
                  )-> Tuple[pd.DataFrame,
-                           pd.DataFrame]:
+                           pd.Series]:
     
     """read single cell data from h5ad
 
@@ -408,7 +408,7 @@ def read_h5ad_sc(cnt_pth : str,
                     .astype(str)
     else:
         _lbl = read_file(lbl_pth)
-        _lbl = _lbl[[lbl_colname]]
+        _lbl = _lbl[lbl_colname]
 
 
     _data = pd.DataFrame(grab_anndata_counts(_data),

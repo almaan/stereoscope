@@ -292,7 +292,7 @@ def make_sc_dataset(cnt_pth : str,
               file = sys.stderr,
               )
     cnt = cnt.loc[inter,:]
-    lbl = lbl.loc[inter,:]
+    lbl = lbl.loc[inter]
 
 
 
