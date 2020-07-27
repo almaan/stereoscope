@@ -4,12 +4,13 @@ from setuptools import setup
 import os
 import sys
 
-setup(name='STereoSCope',
+setup(name='stereoscope',
             version='0.3',
             description='Integration of ST and SC data',
-            url='http://github.com/almaan/stereoscope',
             author='Alma Andersson',
             author_email='alma.andersson@scilifelab.se',
+            url='http://github.com/almaan/stereoscope',
+            download_url='https://github.com/almaan/stereoscope/archive/v_03.tar.gz',
             license='MIT',
             packages=['stsc'],
             python_requires='>3.0.0',
