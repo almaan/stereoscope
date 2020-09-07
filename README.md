@@ -97,7 +97,7 @@ together, this adds (some) context to our labels compared to just using cluster 
 the terminal:
 
 ```console
-foo@bar:~$ ../../preprocess/hippocampus/create-mod-loom.py l1_hippocampus.loom .
+foo@bar:~$ ../../preprocess/hippocampus/create-mod-hippo-loom.py l1_hippocampus.loom .
 successfully created modifed loom-file >> mod_l1_hippocampus.loom
 ```
 Next, we subsample our data set. We use a lower and upper bound (See Methods) of 25 repsectively 250 cells per
