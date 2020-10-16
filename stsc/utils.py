@@ -456,9 +456,7 @@ def read_h5ad_st(cnt_pth : List[str],
         elif "spatial" in _data.obsm.keys():
 
             new_idx = [str(k) + "&-" + str(x)+"x"+str(y) for\
-                        x,y in zip(_data.obsm["spatial"]["pxl_col_in_fullres"].values,
-                                    _data.obsm["spatial"]['pxl_row_in_fullres'].values,
-                                    )]
+                        x,y in _data.obsm["spatial"]]
         else:
             new_idx = [str(k) + "&-" + str( x ) for\
                         x in _data.obs_names ]
