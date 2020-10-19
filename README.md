@@ -1,10 +1,16 @@
 # Spatial mapping of cell types by integration of transcriptomics data
 
-This repository contains the Python package **stereoscope**, which is the implementation of the method presented in the
-paper. In addition, scripts used to: preprocess, visualize, and compare results presented in the paper are also included.
+This repository contains the Python package **stereoscope**, the implementation
+of the method presented in the paper [_"Single-cell and spatial transcriptomics
+enables probabilistic inference of cell type
+topography"_](https://www.nature.com/articles/s42003-020-01247-y). In addition,
+scripts used to: preprocess, visualize, and compare results presented in the
+paper are also included.
 
-Below examples illustrating how to use Stereoscope can be found. While some of these examples are cast as a guides to reproduce the
-results presented in the paper, they can easily be generalized and applied to any data set. The three examples are: 
+Below examples illustrating how to use stereoscope can be found. While some of
+these examples are cast as a guides to reproduce the results presented in the
+paper, they can easily be generalized and applied to any data set. The three
+examples are:
 
 1. [Reproducing the mouse brain analysis](#reprodmb): Conducting the complete analysis of the mouse brain presented in the paper,
    from downloading data to visualization of the results
@@ -31,9 +37,12 @@ new environment.
 the following commands
 ```bash
 foo@bar:~$ cd stereoscope
-foo@bar:~$ ./setup.py install --user
+foo@bar:~$ ./setup.py install
 
 ```
+
+_NOTE:_ on some systems you may need to add the `--user` flag to the install module, resulting in `./setup.py install --user`.
+
 Assuming the installation was successful, you should now have access to both the stereoscope python package (stsc) and the `stereoscope` command line interface
 (CLI) meaning you can conduct the analysis from the terminal. To confirm that the installation was successful, we
 will run two tests, which are:
