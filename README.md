@@ -18,8 +18,6 @@ examples are:
 3. [Using pre-estimated parameters](#bc-add) : Examining four additional breast cancer samples, applying already
    estimated single cell parameters to set of ST data.
 
-_Note: While the ST data will be publicly available upon publication, these files are currently password
-protected - access will be given to reviewers._
 
 ## Installing stereoscope
 In order to install `stereoscope`, we begin by cloning this very repository.
@@ -139,7 +137,7 @@ We have included the two mouse brain sections presented in the paper as `.tsv` f
 preprocess these, but we have zipped them to reduce the file sizes. Unzip these files and place them in the `data/curated` folder, you could do this
 either interactively or for example by entering the following command into the terminal :
 
-ST-data *password* : __zNLXkYk3Q9znUseS_
+*ST-data password* : _zNLXkYk3Q9znUseS_
 
 
 ```console
