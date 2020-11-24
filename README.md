@@ -30,7 +30,7 @@ the following:
 foo@bar:~$ git clone https://github.com/almaan/stereoscope 
 ```
 
-Now to actually install Stereoscope, just use the provided `setup.py` file. If you are working
+Now to actually install stereoscope, just use the provided `setup.py` file. If you are working
 with conda or virtual environments, this is where you should create and source a
 new environment.
 
@@ -139,6 +139,8 @@ We have included the two mouse brain sections presented in the paper as `.tsv` f
 preprocess these, but we have zipped them to reduce the file sizes. Unzip these files and place them in the `data/curated` folder, you could do this
 either interactively or for example by entering the following command into the terminal :
 
+ST-data *password* : __zNLXkYk3Q9znUseS_
+
 
 ```console
 foo@bar:~$ 7z e mouse-st-data.zip
@@ -197,7 +199,7 @@ Some additional things to keep in mind are:
 ## 3. Analysis
 
 ### 3.1 Run the analysis
-Now when the data has been prepared, we are ready to use `steroscope`. We will run the complete analysis, estimating rates and
+Now when the data has been prepared, we are ready to use `steroscope**. We will run the complete analysis, estimating rates and
 logits from the single cell data and then use these to infer the proportion values in our spatial data. We use the following
 specs:
 
@@ -210,6 +212,17 @@ specs:
 | st batch size | 100|
 | learning rate | 0.01|
 | gpu | True |
+
+
+*NOTE* : In the original manuscript we used the top _5000_ (w.r.t. expression
+levels) genes to show that `stereoscope` produces good results without any need
+for pre-processing. However, for **optimal results** we would **recommend** a
+more sophisticated selection of genes; one suggestion is to use the function
+`highly_variable_genes` from `scanpy`'s pre-processing module (see
+[documentation](https://scanpy.readthedocs.io/en/stable/api/scanpy.pp.highly_variable_genes.html)).
+Once a set of genes has been extracted, these can be provided (as a `.txt` file)
+to `stereoscope` using the `-gl` flag. In the next update, this will be introduced as an
+option in the `run` module.
 
 To run the analysis enter the following into your terminal :
 
@@ -562,7 +575,7 @@ st-bc4.tsv
 These files are already processed, only having spots under the tissue and uses HGNC gene symbols - hence there is no need
 to pre-process our data.
 
-### 2. Running Stereoscope
+### 2. Running stereoscope
 
 You will find the estimated single cell parameters (rates and logits) for the Lung Cancer data set in the
 `data/params-lc.zip` file, which when unzipped will create a folder `data/params-lc`.  To use these in
