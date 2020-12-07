@@ -561,3 +561,85 @@ def write_file(file : pd.DataFrame,
              )
 
 
+def subsample_data(cnt : pd.DataFrame,
+                   lbl : pd.DataFrame,
+                   lower_bound : int,
+                   upper_bound : int,
+                   )-> Tuple[pd.DataFrame,pd.DataFrame]:
+
+    """Subsample single cell data
+
+    Subsamples the single cell data w.r.t.
+    the labels. Upper bound gives the maximum number
+    of cells to be included from each type,
+    lower bound gives the minimum required number
+    of cells for a cell type to be included.
+
+    If the number of cells from a given type exceeds the
+    upper bound 'upper_bound' number of cells will randomly
+    be sampled from this type.
+
+    Parameters:
+    ----------
+
+    cnt : pd.DataFrame
+        count data
+    lbl : pd.DataFrame
+        cell type labels, order is expected to be
+        the same as in cnt
+    lower_bound : int
+          lower bound for the number of cells to
+          include from each type
+    upper_bound : int
+         upper bound for the number of cells to
+         include from each type
+
+
+    Returns:
+    --------
+    Subsampled count and label data frames
+
+    """
+
+    np.random.seed(1337)
+
+
+    upper_bound = (upper_bound if upper_bound is\
+                   not None else np.inf)
+    lower_bound = (lower_bound if lower_bound is\
+                   not None else -np.inf)
+
+    assert upper_bound > lower_bound,\
+        "upper bound must be larger than"\
+        "lower bound"
+
+    uni_types  = np.unique(lbl)
+    idxs = np.array([])
+
+    for ct in uni_types:
+        is_member = (lbl == ct)
+        n_members = is_member.sum()
+
+        if n_members < lower_bound:
+            continue
+        elif n_members > upper_bound:
+            member_idx = np.random.choice(np.where(is_member)[0],
+                                          size = upper_bound,
+                                          replace = False,
+                                          )
+            idxs = np.append(idxs,member_idx)
+        else:
+            idxs = np.append(idxs,np.where(is_member)[0])
+
+    cnt = cnt.iloc[idxs,:]
+    lbl = lbl.iloc[idxs]
+
+    return (cnt,lbl)
+
+
+
+
+
+
+
+

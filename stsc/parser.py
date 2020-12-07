@@ -242,12 +242,21 @@ def make_parser():
                                         " to use",
                                         ]))
 
-    run_parser.add_argument('-fb','--freeze_beta',
-                        required = False,
-                        default = False,
-                        action = 'store_true',
-                        help = ''.join(["freeze beta params",
-                                        ]))
+    run_parser.add_argument('-sub','--sc_upper_bound',
+                            required = False,
+                            default = None,
+                            type = int,
+                            help = ''.join(["upper bound for single cell",
+                                            " subsampling."
+                            ]))
+
+    run_parser.add_argument('-slb','--sc_lower_bound',
+                            required = False,
+                            default = None,
+                            type = int,
+                            help = ''.join(["lower bound for single cell",
+                                            " subsampling."
+                            ]))
 
 # Look Parser Arguments -----------------------------------------------
 

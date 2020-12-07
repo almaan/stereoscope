@@ -5,7 +5,7 @@ import os
 import sys
 
 setup(name='stereoscope',
-            version='0.3',
+            version='0.3.1',
             description='Integration of ST and SC data',
             author='Alma Andersson',
             author_email='alma.andersson@scilifelab.se',
@@ -13,7 +13,7 @@ setup(name='stereoscope',
             download_url='https://github.com/almaan/stereoscope/archive/v_03.tar.gz',
             license='MIT',
             packages=['stsc'],
-            python_requires='>3.0.0',
+            python_requires='>3.5.0',
             install_requires=[
                             'torch>=1.1.0',
                             'numba>=0.49.0',

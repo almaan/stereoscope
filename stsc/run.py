@@ -83,7 +83,7 @@ def run(prs : arp.ArgumentParser,
                             ])
                 )
 
-        # control that paths to sc data exists
+        # control thafbt paths to sc data exists
         if not all([osp.exists(args.sc_cnt)]):
 
             log.error(' '.join(["One or more of the specified paths to",
@@ -104,6 +104,8 @@ def run(prs : arp.ArgumentParser,
                                     min_counts = args.min_sc_counts,
                                     min_cells = args.min_cells,
                                     transpose = args.sc_transpose,
+                                    lower_bound = args.sc_lower_bound,
+                                    upper_bound = args.sc_upper_bound,
                                     )
 
         log.info(' '.join(["SC data GENES : {} ".format(sc_data.G),

@@ -295,6 +295,13 @@ def make_sc_dataset(cnt_pth : str,
     lbl = lbl.loc[inter]
 
 
+    if upper_bound is not None or\
+       lower_bound is not None:
+        cnt,lbl = utils.subsample_data(cnt,
+                                       lbl,
+                                       lower_bound,
+                                       upper_bound,
+                                       )
 
     # select top N expressed genes
     if topn_genes is not None:
