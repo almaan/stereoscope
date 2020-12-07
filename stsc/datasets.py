@@ -221,6 +221,8 @@ def make_sc_dataset(cnt_pth : str,
                     min_counts : int = 300,
                     min_cells : int = 0,
                     transpose : bool = False,
+                    upper_bound : int = None,
+                    lower_bound : int = None,
                     ):
 
     """
@@ -257,6 +259,14 @@ def make_sc_dataset(cnt_pth : str,
 
     transpose : bool
         transpose data
+
+    lower_bound : int
+          lower bound for the number of cells to
+          include from each type
+    upper_bound : int
+         upper bound for the number of cells to
+         include from each type
+
 
     Returns:
     -------
