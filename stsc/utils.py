@@ -617,7 +617,7 @@ def subsample_data(cnt : pd.DataFrame,
     idxs = np.array([])
 
     for ct in uni_types:
-        is_member = (lbl == ct)
+        is_member = (lbl.values == ct)
         n_members = is_member.sum()
 
         if n_members < lower_bound:
