@@ -76,6 +76,8 @@ def make_joint_matrix(pths : List[str],
         # add length of matrix
         start_pos.append(cnt.shape[0])
 
+    # only keep unique genes
+    genes = pd.Index(np.unique(genes))
     # get start position for entries of each file
     start_pos = np.cumsum(np.array(start_pos))
     # prepare joint matrix, rownames are numbers
@@ -450,6 +452,10 @@ def read_h5ad_st(cnt_pth : List[str],
     _cnts = list()
     for k,p in enumerate( cnt_pth ):
         _data = ad.read_h5ad(p)
+        _,uni_idx = np.unique(_data.var.index,
+                              return_index = True)
+        _data = data[:,uni_idx]
+
 
         if "x" in _data.obs.keys():
             new_idx = [str(k) + "&-" + str(x)+"x"+str(y) for\
