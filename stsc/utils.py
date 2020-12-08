@@ -404,7 +404,7 @@ def read_h5ad_sc(cnt_pth : str,
 
     _,uni_idx = np.unique(_data.var.index,
                           return_index = True)
-    _data = data[:,uni_idx]
+    _data = _data[:,uni_idx]
 
     if lbl_colname is None:
         lbl_colname = 0
@@ -454,7 +454,7 @@ def read_h5ad_st(cnt_pth : List[str],
         _data = ad.read_h5ad(p)
         _,uni_idx = np.unique(_data.var.index,
                               return_index = True)
-        _data = data[:,uni_idx]
+        _data = _data[:,uni_idx]
 
 
         if "x" in _data.obs.keys():
