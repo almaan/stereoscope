@@ -400,6 +400,10 @@ def read_h5ad_sc(cnt_pth : str,
 
     _data = ad.read_h5ad(cnt_pth)
 
+    _,uni_idx = np.unique(_data.var.index,
+                          return_index = True)
+    _data = data[:,uni_idx]
+
     if lbl_colname is None:
         lbl_colname = 0
 
@@ -635,11 +639,3 @@ def subsample_data(cnt : pd.DataFrame,
     lbl = lbl.iloc[idxs]
 
     return (cnt,lbl)
-
-
-
-
-
-
-
-

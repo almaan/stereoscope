@@ -158,6 +158,7 @@ class CountData(Dataset):
         """
 
         inter = exog_genes.intersection(self.genes)
+        inter = np.unique(inter)
         keep = np.array([ self.genes.get_loc(x) for x in inter])
         self.genes = inter
         self.cnt = self.cnt[:,keep]
