@@ -258,6 +258,13 @@ def make_parser():
                                             " subsampling."
                             ]))
 
+    run_parser.add_argument('-fb','--freeze_beta',
+                            default = False,
+                            action = "store_true",
+                            help = ''.join(["freeze beta parameter",
+                            ]))
+
+
 # Look Parser Arguments -----------------------------------------------
 
     look_parser.add_argument("-pp","--proportions_path",
