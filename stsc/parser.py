@@ -2,9 +2,8 @@
 
 import argparse as arp
 
-def make_parser():
 
-    prs = arp.ArgumentParser()
+def make_parser():
 
     parser = arp.ArgumentParser()
 
@@ -22,247 +21,208 @@ def make_parser():
 
 # Run Parser Arguments ---------------------------------------------
 
-    run_parser.add_argument('-scc','--sc_cnt',
-                        required = False,
-                        type = str,
-                        help = ''.join(["path to single cell",
-                                       " count file. Should be",
-                                       " on format n_cells x n_genes",
-                                       " use flag sct to transpose if",
-                                       " if necessary"]))
+    run_parser.add_argument('-scc', '--sc_cnt',
+                            required=False,
+                            type=str,
+                            help='path to single cell '
+                                 'count file. Should be '
+                                 'in format n_cells x n_genes '
+                                 'use flag sct to transpose '
+                                 'if necessary')
 
-    run_parser.add_argument('-scl','--sc_labels',
-                        required = False,
-                        type = str,
-                        help = ''.join(["path to single cell",
-                                        " labels file. Should be on",
-                            ]))
+    run_parser.add_argument('-scl', '--sc_labels',
+                            required=False,
+                            type=str,
+                            help='path to single cell labels file. Should be on')
 
-    run_parser.add_argument('-lcn','--label_colname',
-                        required = False,
-                        default = 'bio_celltype',
-                        type = str,
-                        help = ''.join(["name of columns that",
-                                        " cell type labels are",
-                                        " listed",
-                            ]))
+    run_parser.add_argument('-lcn', '--label_colname',
+                            required=False,
+                            default='bio_celltype',
+                            type=str,
+                            help='name of columns that '
+                                 'cell type labels are listed')
 
+    run_parser.add_argument('-scb', '--sc_batch_size',
+                            required=False,
+                            default=None,
+                            type=int,
+                            help='batch size for single cell data set')
 
-    run_parser.add_argument('-scb','--sc_batch_size',
-                        required = False,
-                        default = None,
-                        type = int,
-                        help = ''.join(["batch size for",
-                                        " single cell data set",
-                            ]))
+    run_parser.add_argument('-stc', '--st_cnt',
+                            required=False,
+                            default=None,
+                            nargs='+',
+                            help='path to spatial '
+                                 'transcriptomics count file.'
+                                 'Should be in format n_spots x n_genes')
 
-    run_parser.add_argument('-stc','--st_cnt',
-                        required = False,
-                        default = None,
-                        nargs = '+',
-                        help = ''.join(["path to spatial",
-                               " transcriptomics count file.",
-                               " Shoul be on form",
-                               " n_spots x n_genes"]))
+    run_parser.add_argument('-stm', '--st_model',
+                            default=None,
+                            required=False,
+                            help='path to already fitted st model')
 
-    run_parser.add_argument('-stm','--st_model',
-                        default = None,
-                        required = False,
-                        help = ''.join(["path to already fitted",
-                                       " st model"]))
+    run_parser.add_argument('-scm', '--sc_model',
+                            required=False,
+                            default=None,
+                            help='path to already fitted sc model')
 
-    run_parser.add_argument('-scm','--sc_model',
-                        required = False,
-                        default = None,
-                        help = ''.join(["path to already fitted",
-                                       " sc model"]))
+    run_parser.add_argument('-sce', '--sc_epochs',
+                            required=False,
+                            default=20000,
+                            type=int,
+                            help='number of epochs '
+                                 'to be used in fitting '
+                                 'the single cell data')
 
+    run_parser.add_argument('-stb', '--st_batch_size',
+                            required=False,
+                            default=None,
+                            type=int,
+                            help='batch size for the spatial transcriptomics data')
 
-    run_parser.add_argument('-sce','--sc_epochs',
-                        required = False,
-                        default = 20000,
-                        type = int,
-                        help = ''.join(["number of epochs",
-                                " to be used in fitting",
-                                " of single cell data.",
-                                ]))
+    run_parser.add_argument('-scf', '--sc_fit',
+                            required=False,
+                            default=[None, None],
+                            nargs=2,
+                            help='parameters fitted '
+                                 'from single cell '
+                                 'data. First argument '
+                                 'should be path to '
+                                 'R-matrix and second '
+                                 'to logit vector')
 
+    run_parser.add_argument('-ste', '--st_epochs',
+                            default=20000,
+                            type=int,
+                            help='number of epochs '
+                                 'to be used in fitting '
+                                 'the spatial transcriptomics data')
 
-    run_parser.add_argument('-stb','--st_batch_size',
-                        required = False,
-                        default = None,
-                        type = int,
-                        help = ''.join(["batch size for",
-                               " st data set",
-                               ]))
+    run_parser.add_argument('-stt', '--st_transpose',
+                            required=False,
+                            default=False,
+                            action='store_true',
+                            help='transpose spatial transcriptomics data')
 
-    run_parser.add_argument('-scf','--sc_fit',
-                        required = False,
-                        default = [None,None],
-                        nargs = 2,
-                        help =''.join(["parameters fitted",
-                                       " from single cell",
-                                       " data. First argument",
-                                       " should be path to",
-                                       " R-matrix and second",
-                                       " to logit vector"])
-                               )
+    run_parser.add_argument('-sct', '--sc_transpose',
+                            required=False,
+                            default=False,
+                            action='store_true',
+                            help='transpose single cell data')
 
+    # TODO better description
+    run_parser.add_argument('-kn', '--keep_noise',
+                            required=False,
+                            default=False,
+                            action='store_true',
+                            help='keep noise')
 
-    run_parser.add_argument('-ste','--st_epochs',
-                        default = 20000,
-                        type = int,
-                        help = ''.join(["number of epochs",
-                                " to be used in fitting",
-                                " of spatial transcriptomics",
-                                " data.",
-                                ]))
+    run_parser.add_argument('-o', '--out_dir',
+                            required=False,
+                            default='',
+                            type=str,
+                            help='full path to output '
+                                 'directory. Files will '
+                                 'be saved with standard '
+                                 'name and timestamp')
 
-    run_parser.add_argument('-stt','--st_transpose',
-                        required = False,
-                        default = False,
-                        action = 'store_true',
-                        help = "transpose spatial data")
+    run_parser.add_argument('-shh', '--silent_mode',
+                            required=False,
+                            default=False,
+                            action='store_true',
+                            help='include to silence '
+                                 'output throughout fitting')
 
+    run_parser.add_argument('-n', '--topn_genes',
+                            required=False,
+                            default=None,
+                            type=int,
+                            help='only use top n genes based on the '
+                                 'criteria --top_criteria')
 
-    run_parser.add_argument('-sct','--sc_transpose',
-                        required = False,
-                        default = False,
-                        action = 'store_true',
-                        help = "transpose sc data")
+    run_parser.add_argument('-ncr', '--top_criteria',
+                            required=False,
+                            default='hgv',
+                            choices=['hgv', 'expr'],
+                            type=str,
+                            help='criteria to select top genes when --topn_genes is used. '
+                                 'Options are expr for expression or hgv por variance')
 
-    run_parser.add_argument('-kn','--keep_noise',
-                        required = False,
-                        default = False,
-                        action = 'store_true',
-                        help = "keep noise")
+    run_parser.add_argument('-fg', '--filter_genes',
+                            required=False,
+                            default=False,
+                            action='store_true',
+                            help='filter ribosomal genes and Malat1')
 
+    run_parser.add_argument('-lr', '--learning_rate',
+                            required=False,
+                            default=0.01,
+                            type=float,
+                            help='learning rate to be used in the fitting process')
 
-    run_parser.add_argument('-o','--out_dir',
-                        required = False,
-                        default = '',
-                        type = str,
-                        help = ''.join([" full path to output",
-                                        " directory. Files will",
-                                        " be saved with standard ",
-                                        " name and timestamp",
-                                        ]))
+    run_parser.add_argument('-mscc', '--min_sc_counts',
+                            required=False,
+                            default=0,
+                            type=float,
+                            help='minimum number of '
+                                 'counts for single cells '
+                                 'to be included in the analysis')
 
-    run_parser.add_argument('-shh','--silent_mode',
-                        required = False,
-                        default = False,
-                        action = 'store_true',
-                        help = ''.join(["include to silence",
-                                        "output throughout",
-                                        "fitting",
-                                        ]))
+    run_parser.add_argument('-mstc', '--min_st_counts',
+                            required=False,
+                            default=0,
+                            type=float,
+                            help='minimum number of '
+                                 'counts for spots '
+                                 'to be included in '
+                                 'the analysis')
 
-    run_parser.add_argument('-n','--topn_genes',
-                        required = False,
-                        default = None,
-                        type = int,
-                        help = ''.join(["only use top n",
-                                        " mose highly expressed",
-                                        " genes"
-                                        ]))
+    run_parser.add_argument('-mc', '--min_cells',
+                            required=False,
+                            default=0,
+                            type=float,
+                            help='minimum number of '
+                                 'cells for genes '
+                                 'to be observed in the analysis')
 
+    run_parser.add_argument('-ms', '--min_spots',
+                            required=False,
+                            default=0,
+                            type=float,
+                            help='minimum number of '
+                                 'spots for genes '
+                                 'to be observed in '
+                                 'the analysis')
 
-    run_parser.add_argument('-fg','--filter_genes',
-                        required = False,
-                        default = False,
-                        action = 'store_true',
-                        help = ''.join([f"Filter Ribosomal Genes",
-                                        f" and MALAT1",
-                                        ]))
+    run_parser.add_argument('-gp', '--gpu',
+                            required=False,
+                            default=False,
+                            action='store_true',
+                            help='use gpu accelerated computation')
 
+    run_parser.add_argument('-gl', '--gene_list',
+                            required=False,
+                            default=None,
+                            type=str,
+                            help= 'path to list of genes to use in the analysis')
 
-    run_parser.add_argument("-lr","--learning_rate",
-                        required = False,
-                        default = 0.01,
-                        type = float,
-                        help = ''.join([f"learning rate to be",
-                                        f" used."
-                                        ]))
+    run_parser.add_argument('-sub', '--sc_upper_bound',
+                            required=False,
+                            default=None,
+                            type=int,
+                            help='upper bound limit for single cell subsampling')
 
+    run_parser.add_argument('-slb', '--sc_lower_bound',
+                            required=False,
+                            default=None,
+                            type=int,
+                            help='lower bound limit for single cell subsampling')
 
-    run_parser.add_argument("-mscc","--min_sc_counts",
-                        required = False,
-                        default = 0,
-                        type = float,
-                        help = ''.join([f"minimum number of ",
-                                        f" counts for single cells",
-                                        f" to be included in",
-                                        f" the analysis",
-                                        ]))
-
-    run_parser.add_argument("-mstc","--min_st_counts",
-                        required = False,
-                        default = 0,
-                        type = float,
-                        help = ''.join([f"minimum number of ",
-                                        f" counts for spots",
-                                        f" to be included in",
-                                        f" the analysis",
-                                        ]))
-
-
-    run_parser.add_argument("-mc","--min_cells",
-                        required = False,
-                        default = 0,
-                        type = float,
-                        help = ''.join([f"minimum number of ",
-                                        f" cells for genes",
-                                        f" to be observed in",
-                                        f" the analysis",
-                                        ]))
-
-    run_parser.add_argument("-ms","--min_spots",
-                        required = False,
-                        default = 0,
-                        type = float,
-                        help = ''.join([f"minimum number of ",
-                                        f" spots for genes",
-                                        f" to be observed in",
-                                        f" the analysis",
-                                        ]))
-
-
-    run_parser.add_argument('-gp','--gpu',
-                        required = False,
-                        default = False,
-                        action = 'store_true',
-                        help = ''.join(["use gpu",
-                                        ]))
-
-    run_parser.add_argument('-gl','--gene_list',
-                        required = False,
-                        default = None,
-                        type = str,
-                        help = ''.join(["path to list of genes",
-                                        " to use",
-                                        ]))
-
-    run_parser.add_argument('-sub','--sc_upper_bound',
-                            required = False,
-                            default = None,
-                            type = int,
-                            help = ''.join(["upper bound for single cell",
-                                            " subsampling."
-                            ]))
-
-    run_parser.add_argument('-slb','--sc_lower_bound',
-                            required = False,
-                            default = None,
-                            type = int,
-                            help = ''.join(["lower bound for single cell",
-                                            " subsampling."
-                            ]))
-
-    run_parser.add_argument('-fb','--freeze_beta',
-                            default = False,
-                            action = "store_true",
-                            help = ''.join(["freeze beta parameter",
-                            ]))
+    # TODO better description
+    run_parser.add_argument('-fb', '--freeze_beta',
+                            default=False,
+                            action='store_true',
+                            help= 'freeze beta parameter')
 
 
 # Look Parser Arguments -----------------------------------------------
