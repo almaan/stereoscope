@@ -2,16 +2,13 @@
 
 import re
 import sys
-from typing import List,Dict
-
+from typing import List, Dict
 import numpy as np
 import pandas as pd
-
-
 import torch as t
 from torch.utils.data import Dataset
-
 import stsc.utils as utils
+
 
 class CountDataHelper(object):
     """
@@ -19,14 +16,15 @@ class CountDataHelper(object):
     """
 
     @classmethod
-    def update(self,func):
-        def wrapper(self,*args,**kwargs):
-            tmp = func(self,*args,**kwargs)
+    def update(self, func):
+        def wrapper(self, *args, **kwargs):
+            tmp = func(self, *args, **kwargs)
             self.G = int(self.cnt.shape[1])
             self.M = int(self.cnt.shape[0])
             self.Z = np.unique(self.lbl).shape[0]
-            self.libsize = self.cnt.sum(dim = 1)
+            self.libsize = self.cnt.sum(dim=1)
             return tmp
+
         return wrapper
 
 
@@ -48,10 +46,9 @@ class CountData(Dataset):
 
     @CountDataHelper.update
     def __init__(self,
-                 cnt : pd.DataFrame,
-                 lbl : pd.DataFrame  = None,
-                )-> None:
-
+                 cnt: pd.DataFrame,
+                 lbl: pd.DataFrame = None
+                 ) -> None:
         self.cnt = cnt
         self.lbl = np.ones(self.cnt.shape[0]) * np.nan
         self.zidx = np.ones(self.cnt.shape[0]) * np.nan
@@ -64,30 +61,30 @@ class CountData(Dataset):
             self.lbl = lbl
 
             self.index = self.cnt.index.intersection(self.lbl.index)
-            self.cnt = self.cnt.loc[self.index,:]
-            self.lbl = self.lbl.loc[self.index].values.reshape(-1,)
+            self.cnt = self.cnt.loc[self.index, :]
+            self.lbl = self.lbl.loc[self.index].values.reshape(-1, )
 
             # convert labels to numeric indices
-            tonumeric = { v:k for k,v in enumerate(np.unique(self.lbl)) }
+            tonumeric = {v: k for k, v in enumerate(np.unique(self.lbl))}
             self.zidx = np.array([tonumeric[l] for l in self.lbl])
 
             # Sort data according to label enumeration
-            # to speed up element acession
+            # to speed up element accession
             srt = np.argsort(self.zidx)
             self.zidx = self.zidx[srt]
             self.lbl = self.lbl[srt]
-            self.cnt = self.cnt.iloc[srt,:]
+            self.cnt = self.cnt.iloc[srt, :]
 
             self.zidx = t.LongTensor(self.zidx.flatten().astype(np.int32))
 
         # Convert to tensor
         self.cnt = t.tensor(self.cnt.values.astype(np.float32))
-        self.libsize = self.cnt.sum(dim = 1)
+        self.libsize = self.cnt.sum(dim=1)
 
     @CountDataHelper.update
     def filter_genes(self,
-                     pattern : str = None,
-                    )-> None:
+                     pattern: str = None
+                     ) -> None:
         """ Filter genes based on regex-pattern
 
         Parameter:
@@ -99,21 +96,16 @@ class CountData(Dataset):
             and MALAT1
 
         """
-        if pattern is None:
-           pattern =  '^RP|MALAT1'
-
-        keep = [ re.search(pattern,x.upper()) is \
-                None for x in self.genes]
-
-        self.cnt = self.cnt[:,keep]
+        pattern = '^RP|MALAT1' if pattern is None else pattern
+        keep = [re.search(pattern, x.upper()) is None for x in self.genes]
+        self.cnt = self.cnt[:, keep]
         self.genes = self.genes[keep]
 
     @CountDataHelper.update
     def filter_bad(self,
-                   min_counts : int = 0,
-                   min_occurance : int = 0,
-                  )-> None:
-
+                   min_counts: int = 0,
+                   min_occurance: int = 0
+                   ) -> None:
         """Filter bad data points
 
         Parameter:
@@ -130,18 +122,18 @@ class CountData(Dataset):
 
         """
 
-        row_thrs, col_thrs = min_counts,min_occurance
-        ridx = np.where(self.cnt.sum(dim = 1) > row_thrs)[0]
-        cidx = np.where((self.cnt != 0).type(t.float32).sum(dim = 0) > col_thrs)[0]
+        row_thrs, col_thrs = min_counts, min_occurance
+        ridx = np.where(self.cnt.sum(dim=1) > row_thrs)[0]
+        cidx = np.where((self.cnt != 0).type(t.float32).sum(dim=0) > col_thrs)[0]
 
-        self.cnt = self.cnt[ridx,:][:,cidx]
+        self.cnt = self.cnt[ridx, :][:, cidx]
         self.lbl = self.lbl[ridx]
         self.zidx = self.zidx[ridx].type(t.LongTensor)
 
     @CountDataHelper.update
     def intersect(self,
-                  exog_genes : pd.Index,
-                 ) -> pd.Index:
+                  exog_genes: pd.Index
+                  ) -> pd.Index:
         """Intersect genes of CountData object with external set
 
         Parameter:
@@ -159,14 +151,14 @@ class CountData(Dataset):
 
         inter = exog_genes.intersection(self.genes)
         inter = np.unique(inter)
-        keep = np.array([ self.genes.get_loc(x) for x in inter])
+        keep = np.array([self.genes.get_loc(x) for x in inter])
         self.genes = inter
-        self.cnt = self.cnt[:,keep]
+        self.cnt = self.cnt[:, keep]
 
         return self.genes
 
-    def unique_labels(self,
-                     )->np.ndarray:
+    def unique_labels(self
+                      ) -> np.ndarray:
         """Get unique labels
 
         Returns:
@@ -174,16 +166,14 @@ class CountData(Dataset):
         Array of unique cell type labels
 
         """
-        _,upos = np.unique(self.zidx, return_index = True)
+        _, upos = np.unique(self.zidx, return_index=True)
         typenames = self.lbl[upos]
 
         return typenames
 
-
-
     def __getitem__(self,
-                    idx: List[int],
-                   )-> Dict:
+                    idx: List[int]
+                    ) -> Dict:
         """Get sample with specified index
 
         Parameter:
@@ -199,33 +189,34 @@ class CountData(Dataset):
         indices (gidx)
 
         """
-        sample = {'x' : self.cnt[idx,:],
-                  'meta' : self.zidx[idx],
-                  'sf' : self.libsize[idx],
-                  'gidx' : t.tensor(idx),
-                 }
+        sample = {'x': self.cnt[idx, :],
+                  'meta': self.zidx[idx],
+                  'sf': self.libsize[idx],
+                  'gidx': t.tensor(idx)
+                  }
 
         return sample
 
     def __len__(self,
-               )-> int:
+                ) -> int:
         """Length of CountData object"""
 
         return self.M
 
-def make_sc_dataset(cnt_pth : str,
-                    lbl_pth : str,
-                    topn_genes : int = None,
-                    gene_list_pth : str = None,
-                    filter_genes : bool = False,
-                    lbl_colname : str = 'bio_celltype',
-                    min_counts : int = 300,
-                    min_cells : int = 0,
-                    transpose : bool = False,
-                    upper_bound : int = None,
-                    lower_bound : int = None,
-                    ):
 
+def make_sc_dataset(cnt_pth: str,
+                    lbl_pth: str,
+                    topn_genes: int = None,
+                    top_criteria: str = 'hgv',
+                    gene_list_pth: str = None,
+                    filter_genes: bool = False,
+                    lbl_colname: str = 'bio_celltype',
+                    min_counts: int = 300,
+                    min_cells: int = 0,
+                    transpose: bool = False,
+                    upper_bound: int = None,
+                    lower_bound: int = None
+                    ):
     """
     Generate CountData object for SC-data
 
@@ -238,9 +229,12 @@ def make_sc_dataset(cnt_pth : str,
     lbl_pth : str
         path to SC label data
 
-    topn_genes : bool
-        number of top expressed genes to
-        include
+    topn_genes : int
+        number of top genes to include
+
+    top_criteria : str
+        criteria to select topn_genes. Can be either
+        expression 'expr' or highly variable 'hgv'
 
     gene_list_pth : str
         gene list
@@ -254,7 +248,7 @@ def make_sc_dataset(cnt_pth : str,
         spot/cell for it to be included
 
     min_cells : int
-        minimal number of occurances
+        minimal number of occurrences
         of a gene among all cells
         for it to be included
 
@@ -278,85 +272,89 @@ def make_sc_dataset(cnt_pth : str,
 
     sc_ext = utils.get_extenstion(cnt_pth)
 
-    if sc_ext == 'h5ad' :
-        cnt,lbl = utils.read_h5ad_sc(cnt_pth,
-                                     lbl_colname,
-                                     lbl_pth,
-                                     )
+    if sc_ext is 'h5ad':
+        cnt, lbl = utils.read_h5ad_sc(cnt_pth,
+                                      lbl_colname,
+                                      lbl_pth
+                                      )
     else:
-        cnt = utils.read_file(cnt_pth,sc_ext)
+        cnt = utils.read_file(cnt_pth, sc_ext)
         if transpose:
             cnt = cnt.T
         lbl = utils.read_file(lbl_pth)
 
         # get labels
         if lbl_colname is None:
-            lbl = lbl.iloc[:,0]
+            lbl = lbl.iloc[:, 0]
         else:
-            lbl = lbl.loc[:,lbl_colname]
+            lbl = lbl.loc[:, lbl_colname]
 
     # match count and label data
     inter = cnt.index.intersection(lbl.index)
     if inter.shape[0] < 1:
-        print("[ERROR] : single cell count and annotation"\
+        print("[ERROR] : single cell count and annotation"
               " data did not match. Exiting.",
-              file = sys.stderr,
+              file=sys.stderr
               )
-    cnt = cnt.loc[inter,:]
+        sys.exit(-1)
+
+    cnt = cnt.loc[inter, :]
     lbl = lbl.loc[inter]
 
+    if upper_bound is not None or \
+            lower_bound is not None:
+        cnt, lbl = utils.subsample_data(cnt,
+                                        lbl,
+                                        lower_bound,
+                                        upper_bound
+                                        )
 
-    if upper_bound is not None or\
-       lower_bound is not None:
-        cnt,lbl = utils.subsample_data(cnt,
-                                       lbl,
-                                       lower_bound,
-                                       upper_bound,
-                                       )
-
-    # select top N expressed genes
-    if topn_genes is not None:
-        genesize = cnt.values.sum(axis = 0)
-        topn_genes = np.min((topn_genes,genesize.shape[0]))
+    # select top N genes
+    if topn_genes is not None and top_criteria in ['expr', 'hgv']:
+        # NOTE Pandas supports var and sum, this could be simplified
+        genesize = cnt.values.sum(axis=0) if top_criteria is 'expr' else cnt.values.var(axis=0)
+        topn_genes = np.min((topn_genes, genesize.shape[0]))
         sel = np.argsort(genesize)[::-1]
         sel = sel[0:topn_genes]
-        cnt = cnt.iloc[:,sel]
+        cnt = cnt.iloc[:, sel]
+    elif topn_genes is not None:
+        # NOTE top_criteria is neither hgv or expr
+        # we should throw an exception here or a warning
+        pass
 
     # only use genes in specific genes list
     # if specified
     if gene_list_pth is not None:
-        with open(gene_list_pth,'r+') as fopen:
+        with open(gene_list_pth, 'r+') as fopen:
             gene_list = fopen.readlines()
-
-        gene_list = pd.Index([ x.replace('\n','') for x in gene_list ])
+        gene_list = pd.Index([x.replace('\n', '') for x in gene_list])
         sel = cnt.columns.intersection(gene_list)
-        cnt = cnt.loc[:,sel]
+        cnt = cnt.loc[:, sel]
 
     # create sc data set
-    dataset = CountData(cnt = cnt,
-                        lbl = lbl)
+    dataset = CountData(cnt=cnt, lbl=lbl)
 
     # filter genes based on names
     if filter_genes:
         dataset.filter_genes()
 
     # filter data based on quality
-    if any([min_counts > 0,min_cells > 0]):
-        dataset.filter_bad(min_counts = min_counts,
-                           min_occurance = min_cells,
-                          )
+    if any([min_counts > 0, min_cells > 0]):
+        dataset.filter_bad(min_counts=min_counts,
+                           min_occurance=min_cells
+                           )
 
     return dataset
 
 
-def make_st_dataset(cnt_pths : List[str],
-                    topn_genes : bool = None,
-                    min_counts : int = 0,
-                    min_spots : int = 0,
-                    filter_genes : bool = False,
-                    transpose : bool = False,
-                    )-> CountData :
-
+def make_st_dataset(cnt_pths: List[str],
+                    topn_genes: int = None,
+                    top_criteria: str = 'hgv',
+                    min_counts: int = 0,
+                    min_spots: int = 0,
+                    filter_genes: bool = False,
+                    transpose: bool = False
+                    ) -> CountData:
     """
     Generate CountData object for ST-data
 
@@ -366,9 +364,13 @@ def make_st_dataset(cnt_pths : List[str],
     cnt_pths : List[str]
         list of paths to ST-data
 
-    topn_genes : bool
+    topn_genes : int
         number of top expressed genes to
         include in analysis
+
+    top_criteria : str
+        criteria to select topn_genes. Can be either
+        expression 'expr' or highly variable 'hgv'
 
     min_counts : int
         minimal number of observed
@@ -402,16 +404,20 @@ def make_st_dataset(cnt_pths : List[str],
     if st_ext == "h5ad":
         cnt = utils.read_h5ad_st(cnt_pths)
     else:
-        cnt = utils.make_joint_matrix(cnt_pths,
-                                      transpose)
+        cnt = utils.make_joint_matrix(cnt_pths, transpose)
 
-    # select top N genes if specified
-    if topn_genes is not None:
-        genesize = cnt.values.sum(axis = 0)
-        topn_genes = np.min((topn_genes,genesize.shape[0]))
+    # select top N genes
+    if topn_genes is not None and top_criteria in ['expr', 'hgv']:
+        # NOTE Pandas supports var and sum, this could be simplified
+        genesize = cnt.values.sum(axis=0) if top_criteria is 'expr' else cnt.values.var(axis=0)
+        topn_genes = np.min((topn_genes, genesize.shape[0]))
         sel = np.argsort(genesize)[::-1]
         sel = sel[0:topn_genes]
-        cnt = cnt.iloc[:,sel]
+        cnt = cnt.iloc[:, sel]
+    elif topn_genes is not None:
+        # NOTE top_criteria is neither hgv or expr
+        # we should throw an exception here or a warning
+        pass
 
     dataset = CountData(cnt)
 
@@ -420,12 +426,9 @@ def make_st_dataset(cnt_pths : List[str],
         dataset.filter_genes()
 
     # filter data based on quality
-    if any([min_counts > 0,min_spots > 0]):
-        dataset.filter_bad(min_counts = min_counts,
-                           min_occurance = min_spots,
+    if any([min_counts > 0, min_spots > 0]):
+        dataset.filter_bad(min_counts=min_counts,
+                           min_occurance=min_spots
                            )
 
-
     return dataset
-
-
