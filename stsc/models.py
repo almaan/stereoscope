@@ -217,7 +217,7 @@ class STModel(nn.Module):
         # account for gene specific bias and add noise
         self.Rhat = t.cat((t.mul(self.beta_trans(self.beta), self.R), self.eps), dim=1)
 
-        # combinde rates for all cell types
+        # combine rates for all cell types
         self.r = t.einsum('gz,zs->gs', [self.Rhat, self.v[:, self.gidx]])
 
         # get loss for current parameters

@@ -53,11 +53,7 @@ def get_loss_data(loss_file: str
     """
     # exit if  loss file does not exist
     if not osp.exists(loss_file):
-        print(' '.join([f"ERROR : the file {loss_file}",
-                        "does not exist",
-                        ]
-                       )
-              )
+        print('ERROR : the file {} does not exist'.format(loss_file))
         sys.exit(-1)
 
     # read loss files
@@ -71,7 +67,7 @@ def get_loss_data(loss_file: str
     # generate epoch values
     epoch = np.arange(1, loss_history.shape[0] + 1)
 
-    return (epoch, loss_history)
+    return epoch, loss_history
 
 
 def progress(loss_file: str,

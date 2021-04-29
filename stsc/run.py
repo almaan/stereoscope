@@ -79,8 +79,8 @@ def run(prs: arp.ArgumentParser,
 
         # control that paths to sc data exists
         if not all([osp.exists(args.sc_cnt)]):
-            log.error(' '.join(["One or more of the specified paths to",
-                                "the sc data does not exist"]))
+            log.error('One or more of the specified paths to '
+                      'the sc data does not exist')
             sys.exit(-1)
 
         # load pre-fitted model if provided
@@ -153,7 +153,7 @@ def run(prs: arp.ArgumentParser,
         R = utils.read_file(args.sc_fit[0])
         logits = utils.read_file(args.sc_fit[1])
 
-    # If ST data is provided estiamte proportions
+    # If ST data is provided estimate proportions
     if args.st_cnt[0] is not None:
         # generate identifying tag for each section
         sectiontag = list(map(lambda x: '.'.join(osp.basename(x).split('.')[0:-1]), args.st_cnt))

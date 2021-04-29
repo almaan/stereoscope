@@ -116,11 +116,9 @@ def split_joint_matrix(jmat: pd.DataFrame
     try:
         idx, name = zip(*[idx.split('&-') for idx in jmat.index])
     except:
-        print("_".join([f"Matrix provided is not",
-                        f"a joint matrix generated",
-                        f"by make_joint_matrix",
-                        ]
-                       )
+        print("Matrix provided is not "
+              "a joint matrix generated "
+              "by make_joint_matrix"
               )
 
     # convert names to pandas index
@@ -357,8 +355,8 @@ def grab_anndata_counts(x: ad.AnnData
     elif isinstance(x.X, pd.DataFrame):
         return x.X.values
     else:
-        print("[ERROR] : unsupported" \
-              " data format : {}. Exiting.".format(type(x.X)),
+        print("[ERROR] : unsupported "
+              "data format : {}. Exiting.".format(type(x.X)),
               )
         sys.exit(-1)
 
@@ -490,12 +488,10 @@ def read_file(file_name: str,
     supported = ['tsv', 'gz']
 
     if extension not in supported:
-        print(' '.join([f"ERROR: File format {extension}",
-                        f"is not yet supported. Please",
-                        f"use any of {' '.join(supported)}",
-                        f"formats instead"
-                        ]
-                       )
+        print('"ERROR: File format {} '
+              'is not yet supported. Please '
+              'use any of these {} '
+              'formats instead'.format(extension, ' '.join(supported))
               )
 
         sys.exit(-1)
@@ -511,11 +507,8 @@ def read_file(file_name: str,
 
             return file
         except:
-            print(' '.join([f"Something went wrong",
-                            f"when trying to read",
-                            f"file >> {file_name}"
-                            ]
-                           )
+            print('Something went wrong '
+                  'when trying to read file >> {}'.format(file_name)
                   )
 
 
@@ -539,11 +532,8 @@ def write_file(file: pd.DataFrame,
                     header=True,
                     sep='\t')
     except:
-        print(' '.join([f"An error occured",
-                        f"while trying to write",
-                        f"file >> {opth}",
-                        ]
-                       )
+        print('An error occurred '
+              'while trying to write file >> {}'.format(opth)
               )
 
 

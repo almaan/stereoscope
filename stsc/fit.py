@@ -112,11 +112,7 @@ def fit(model: Union[M.ScModel, M.STModel],
         loss_tracker.write_history()
 
     except KeyboardInterrupt:
-        print(' '.join(["\n\nPress Ctrl+C again",
-                        "to interrupt whole process",
-                        ]
-                       )
-              )
+        print('\n\nPress Ctrl+C again to interrupt whole process')
 
 
 def fit_st_data(st_data: D.CountData,
@@ -200,9 +196,7 @@ def fit_st_data(st_data: D.CountData,
         try:
             st_model.load_state_dict(t.load(st_from_model))
         except:
-            print(' '.join(["Could not load state",
-                            "dict from >> {st_from_model}"],
-                           ),
+            print('Could not load state dict from >> {}'.format(st_from_model),
                   file=sys.stderr
                   )
 
