@@ -436,6 +436,17 @@ def make_parser():
                                        ]),
                         )
 
+    look_parser.add_argument("-spf","--spatial_folder",
+                             required = False,
+                             nargs ="+",
+                             default = None,
+                             help = ''.join(["Path to the spatial output folders,",
+                                             "of the Visium samples",
+                                             "Must be in same order as the W-files.",
+                             ]),
+                        )
+
+
     progress_parser.add_argument("-lf",'--loss_file',
                                  required = True,
                                  help = ''.join(['path to loss',
