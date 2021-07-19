@@ -38,6 +38,30 @@ from stsc.utils import make_joint_matrix, split_joint_matrix
 
 #%% Funtions -------------------------------
 
+
+def read_visium_spatial(spatial_folder,
+                        propdata,
+                        as_he = False,
+                        include_image = False):
+    import json
+    tpl = pd.read_csv(osp.join(spatial_folder,
+                               "tissue_positions_list.csv",
+                               ),sep=",",index_col = 0,header = None)
+    tpl.columns = ["UT","xarr","yarr","xpix","ypix"]
+    tpl = tpl.loc[propdata.index,:]
+
+
+    with open(osp.join(spatial_folder,"scalefactors_json.json"),"r+") as f:
+        scale_factor = json.load(f)
+
+    scale_factor = scale_factor["tissue_hires_scalef"]
+    crds = tpl[["xpix","ypix"]].values * scale_factor
+    if as_he:
+        crds = crds[:,[1,0]]
+    return crds
+
+
+
 def spltstr(string,size = 20):
     rxseps = [' ','-','\\.','_']
     if len(string) > size:
@@ -395,7 +419,16 @@ def look(args,):
 
     wlist = split_joint_matrix(allwmat)
 
-    crdlist = [get_crd(w,as_he = args.image_orientation) for w in wlist]
+    if args.spatial_folder is None:
+        crdlist = [get_crd(w,as_he = args.image_orientation) for w in wlist]
+    else:
+        if len(args.spatial_folder) > 1:
+            crdlist = [read_visium_spatial(sf,w,as_he = args.image_orientation) for \
+                       sf,w in zip(args.spatial_folder,wlist)]
+        else:
+            crdlist = [read_visium_spatial(args.spatial_folder[0],
+                                           propdata = w,
+                                           as_he=args.image_orientation) for w in wlist] 
 
     celltypes = allwmat.columns.tolist()
     n_sections = len(proppaths)
