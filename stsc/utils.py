@@ -427,6 +427,7 @@ def read_h5ad_sc(cnt_pth : str,
     return _data,_lbl
 
 def read_h5ad_st(cnt_pth : List[str],
+                 keep_barcodes: bool = True,
                  )-> pd.DataFrame:
 
     """read spatial data from h5ad
@@ -438,14 +439,24 @@ def read_h5ad_st(cnt_pth : List[str],
 
     Returns:
     -------
-    Pandas DataFrame of a joint matrix. Data points
-    from the same file will share the same
-    rowname prefix k, in the
-    joint matrix rowname given as:
+    Pandas DataFrame of a joint matrix.
+    Data points from the same file will share
+    the same rowname prefix k. Depending on the value
+    of keep_barcode, the full rowname will take one of two
+    forms:
+
+    when keep_barcodes = True:
+
+    "k&-[barcode]" where [barcode] is the original
+    rowname of the capture location.
+
+    when keep_barcodes = False:
+
     "k&-[x-coordinate]x[y-coordinate]" if
     coordinates are identified. Otherwise
     the rownames are given as:
-    "k&-orignal-rowname"
+    "k&-orignal-rowname". Use this option for immediate
+    compability with stereoscope's look module.
 
     """
 
@@ -456,20 +467,23 @@ def read_h5ad_st(cnt_pth : List[str],
                               return_index = True)
         _data = _data[:,uni_idx]
 
-
-        if "x" in _data.obs.keys():
-            new_idx = [str(k) + "&-" + str(x)+"x"+str(y) for\
+        if keep_barcodes:
+            new_idx = [str(k) + "&-" + str(b) for\
+                       b in _data.obs.index.values]
+        else:
+            if "x" in _data.obs.keys():
+                new_idx = [str(k) + "&-" + str(x)+"x"+str(y) for\
                         x,y in zip(_data.obs["x"].values,
                                     _data.obs['y'].values,
-                                    )]
+                        )]
 
-        elif "spatial" in _data.obsm.keys():
+            elif "spatial" in _data.obsm.keys():
 
-            new_idx = [str(k) + "&-" + str(x)+"x"+str(y) for\
-                        x,y in _data.obsm["spatial"]]
-        else:
-            new_idx = [str(k) + "&-" + str( x ) for\
-                        x in _data.obs_names ]
+                new_idx = [str(k) + "&-" + str(x)+"x"+str(y) for\
+                            x,y in _data.obsm["spatial"]]
+            else:
+                new_idx = [str(k) + "&-" + str( x ) for\
+                            x in _data.obs_names ]
 
         new_idx = pd.Index(new_idx)
         _data = pd.DataFrame(grab_anndata_counts(_data),
@@ -479,7 +493,7 @@ def read_h5ad_st(cnt_pth : List[str],
         _cnts.append(_data)
 
     cnts = pd.concat(_cnts,
-                        join = "outer")
+                     join = "outer")
 
     del _cnts,_data
 

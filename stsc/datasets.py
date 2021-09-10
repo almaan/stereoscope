@@ -355,6 +355,7 @@ def make_st_dataset(cnt_pths : List[str],
                     min_spots : int = 0,
                     filter_genes : bool = False,
                     transpose : bool = False,
+                    keep_barcodes: bool = True,
                     )-> CountData :
 
     """
@@ -387,6 +388,12 @@ def make_st_dataset(cnt_pths : List[str],
     transpose : bool
         transpose data
 
+    keep_barcodes: bool
+        if original rownames should be
+        used or whether rownames should
+        be based on spatial coordinates.
+        Only applicable when using h5ad files.
+
 
     Returns:
     -------
@@ -400,7 +407,7 @@ def make_st_dataset(cnt_pths : List[str],
     st_ext = utils.get_extenstion(cnt_pths[0])
 
     if st_ext == "h5ad":
-        cnt = utils.read_h5ad_st(cnt_pths)
+        cnt = utils.read_h5ad_st(cnt_pths,keep_barcodes)
     else:
         cnt = utils.make_joint_matrix(cnt_pths,
                                       transpose)

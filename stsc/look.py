@@ -20,6 +20,7 @@ import os.path as osp
 import argparse as arp
 import warnings
 from scipy import interpolate
+import anndata as ad
 
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
@@ -60,6 +61,18 @@ def read_visium_spatial(spatial_folder,
         crds = crds[:,[1,0]]
     return crds
 
+
+def read_adata(adata_pth):
+    adata = ad.read_h5ad(adata_pth)
+    if hasattr(adata,"obsm") and\
+        "spatial" in adata.obsm.keys():
+        crd = adata.obsm["spatial"]
+    elif "x" in adata.obs.keys() and\
+         "y" in adata.obs.keys():
+        crd = adata.obs[["x","y"]].values
+    else:
+        ValueError("No spatial coordinates found")
+    return crd
 
 
 def spltstr(string,size = 20):
@@ -419,9 +432,9 @@ def look(args,):
 
     wlist = split_joint_matrix(allwmat)
 
-    if args.spatial_folder is None:
+    if args.spatial_folder is None and args.adata_files is None:
         crdlist = [get_crd(w,as_he = args.image_orientation) for w in wlist]
-    else:
+    elif args.spatial_folder is not None:
         if len(args.spatial_folder) > 1:
             crdlist = [read_visium_spatial(sf,w,as_he = args.image_orientation) for \
                        sf,w in zip(args.spatial_folder,wlist)]
@@ -429,6 +442,8 @@ def look(args,):
             crdlist = [read_visium_spatial(args.spatial_folder[0],
                                            propdata = w,
                                            as_he=args.image_orientation) for w in wlist] 
+    elif args.adata_files is not None:
+        crdlist = [read_adata(a) for a in args.adata_files]
 
     celltypes = allwmat.columns.tolist()
     n_sections = len(proppaths)

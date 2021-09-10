@@ -180,6 +180,7 @@ def run(prs : arp.ArgumentParser,
                                      min_spots = args.min_spots,
                                      filter_genes = args.filter_genes,
                                      transpose = args.st_transpose,
+                                     keep_barcodes=args.keep_barcodes,
                                     )
 
         log.info(' '.join(["ST data GENES : {} ".format(st_data.G),

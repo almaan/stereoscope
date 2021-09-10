@@ -264,6 +264,15 @@ def make_parser():
                             help = ''.join(["freeze beta parameter",
                             ]))
 
+    run_parser.add_argument('-kb','--keep_barcodes',
+                            default = False,
+                            action = "store_true",
+                            help = ''.join(["keep original barcode names.",
+                                            "If not used rownames in output",
+                                            "will be [x-coordinate]x[y-coordinate]",
+                            ]))
+
+
 
 # Look Parser Arguments -----------------------------------------------
 
@@ -445,6 +454,17 @@ def make_parser():
                                              "Must be in same order as the W-files.",
                              ]),
                         )
+
+    look_parser.add_argument("-af","--adata_files",
+                             required = False,
+                             nargs ="+",
+                             default = None,
+                             help = ''.join(["Path to the anndata files,",
+                                             "of the Visium samples",
+                                             "Must be in same order as the W-files.",
+                             ]),
+                        )
+
 
 
     progress_parser.add_argument("-lf",'--loss_file',
