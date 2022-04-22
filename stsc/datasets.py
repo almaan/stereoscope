@@ -291,7 +291,11 @@ def make_sc_dataset(cnt_pth : str,
 
         # get labels
         if lbl_colname is None:
-            lbl = lbl.iloc[:,0]
+            # leaving this in for old defaults
+            if "bio_celltype" in lbl.columns:
+                lbl = lbl.iloc[:,"bio_celltype"]
+            else:
+                lbl = lbl.iloc[:,0]
         else:
             lbl = lbl.loc[:,lbl_colname]
 

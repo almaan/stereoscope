@@ -40,7 +40,7 @@ def make_parser():
 
     run_parser.add_argument('-lcn','--label_colname',
                         required = False,
-                        default = 'bio_celltype',
+                        default = None,
                         type = str,
                         help = ''.join(["name of columns that",
                                         " cell type labels are",
