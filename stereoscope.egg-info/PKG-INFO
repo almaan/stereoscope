@@ -1,0 +1,12 @@
+Metadata-Version: 1.2
+Name: stereoscope
+Version: 0.3.1
+Summary: Integration of ST and SC data
+Home-page: http://github.com/almaan/stereoscope
+Author: Alma Andersson
+Author-email: alma.andersson@scilifelab.se
+License: MIT
+Download-URL: https://github.com/almaan/stereoscope/archive/v_03.tar.gz
+Description: UNKNOWN
+Platform: UNKNOWN
+Requires-Python: >=3.7.0

@@ -351,7 +351,7 @@ class LossTracker:
         return self.history[-1]
 
 
-def get_extenstion( pth : str) -> str:
+def get_extension( pth : str) -> str:
     """ get filetype extension"""
     return osp.splitext(pth)[1][1::]
 
@@ -426,8 +426,9 @@ def read_h5ad_sc(cnt_pth : str,
 
     return _data,_lbl
 
-def read_h5ad_st(cnt_pth : List[str],
+def read_st(cnt_pth : List[str],
                  keep_barcodes: bool = True,
+                 transpose: bool = False,
                  )-> pd.DataFrame:
 
     """read spatial data from h5ad
@@ -436,6 +437,13 @@ def read_h5ad_st(cnt_pth : List[str],
     ----------
     cnt_pth : List[str]
         paths to spatial data (h5ad) files
+    keep_barcodes: bool
+        whether to keep original barcodes as row names, or replace them with
+        ST1K like indices
+    transpose: bool
+        if reading tsv/csv files, whether these should
+        be transposed.
+
 
     Returns:
     -------
@@ -460,9 +468,27 @@ def read_h5ad_st(cnt_pth : List[str],
 
     """
 
+    pandas_ext = {".tsv":"\t",".csv":","}
     _cnts = list()
     for k,p in enumerate( cnt_pth ):
-        _data = ad.read_h5ad(p)
+
+        ext = [x for x in pandas_ext.keys() if x in p]
+        if len(ext)>1:
+            _data = pd.read_csv(p,
+                                sep = pandas_ext[ext[0]],
+                                header = 0,
+                                index_col = 0)
+            if transpose:
+                _data = _data.T
+
+            _data = ad.AnnData(_data)
+
+        elif ".h5ad" in p:
+            _data = ad.read_h5ad(p)
+        else:
+            print("[ERROR] : current ST data format not supported yet.")
+            sys.exit(-1)
+
         _,uni_idx = np.unique(_data.var.index,
                               return_index = True)
         _data = _data[:,uni_idx]
@@ -473,9 +499,9 @@ def read_h5ad_st(cnt_pth : List[str],
         else:
             if "x" in _data.obs.keys():
                 new_idx = [str(k) + "&-" + str(x)+"x"+str(y) for\
-                        x,y in zip(_data.obs["x"].values,
-                                    _data.obs['y'].values,
-                        )]
+                           x,y in zip(_data.obs["x"].values,
+                                      _data.obs['y'].values,
+                           )]
 
             elif "spatial" in _data.obsm.keys():
 
@@ -523,7 +549,7 @@ def read_file(file_name : str,
     """
 
     if extension is None:
-        extension = get_extenstion(file_name)
+        extension = get_extension(file_name)
 
     supported = ['tsv','gz',]
 

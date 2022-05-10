@@ -265,7 +265,7 @@ def make_parser():
                             ]))
 
     run_parser.add_argument('-kb','--keep_barcodes',
-                            default = False,
+                            default = True,
                             action = "store_true",
                             help = ''.join(["keep original barcode names.",
                                             "If not used rownames in output",

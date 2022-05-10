@@ -18,4 +18,5 @@ visual/make_transmat.py
 visual/propviz.py
 res/*/
 !res/.keep
+preprocess/other/
 

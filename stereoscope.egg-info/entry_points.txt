@@ -1,0 +1,3 @@
+[console_scripts]
+stereoscope = stsc.__main__:main
+

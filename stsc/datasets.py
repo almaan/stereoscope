@@ -408,13 +408,11 @@ def make_st_dataset(cnt_pths : List[str],
 
     # create joint matrix for count data
 
-    st_ext = utils.get_extenstion(cnt_pths[0])
+    cnt = utils.read_st(cnt_pths,
+                        keep_barcodes,
+                        transpose,
+                        )
 
-    if st_ext == "h5ad":
-        cnt = utils.read_h5ad_st(cnt_pths,keep_barcodes)
-    else:
-        cnt = utils.make_joint_matrix(cnt_pths,
-                                      transpose)
 
     # select top N genes if specified
     if topn_genes is not None:
