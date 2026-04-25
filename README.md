@@ -1,5 +1,7 @@
 # Spatial mapping of cell types by integration of transcriptomics data
 
+⚠️ **NOTE: See the updated speedy version ⚡ `flash-scope` [here](https://github.com/almaan/flash-scope)**
+
 This repository contains the Python package **stereoscope**, the implementation
 of the method presented in the paper [_"Single-cell and spatial transcriptomics
 enables probabilistic inference of cell type
