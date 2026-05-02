@@ -17,7 +17,7 @@ setup(name='stereoscope',
             install_requires=[
                             'torch>=1.1.0',
                             'numba==0.54.1',
-                            'numpy==1.20.0',
+                            'numpy==1.22.0',
                             'pandas>=0.25.0',
                             'matplotlib>=3.1.0',
                             'scikit-learn>=0.20.0',
